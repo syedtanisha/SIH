@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+python-jose[cryptography]
+bcrypt
+pydantic
+pydantic-settings
+sqlalchemy
+pypdf
+python-pptx
+python-docx
+httpx
+pytest
+
+email-validator
+python-multipart
