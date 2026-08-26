@@ -1,0 +1,300 @@
+# Official Competencies, Baseline Questions, and Resources Data for India's Statistical System
+
+COMPETENCIES_SEED = [
+    {
+        "code": "STAT_SURVEY",
+        "name": "Survey Methodology & Sampling Design",
+        "domain": "Survey Operations",
+        "description": "Techniques of probability sampling, stratified multistage sampling design, sampling frames, weighting procedures, and non-sampling error minimization in large-scale national socioeconomic surveys.",
+        "required_level": 80.0,
+        "weight": 1.2
+    },
+    {
+        "code": "STAT_NAT_ACC",
+        "name": "National Accounts Statistics & Macro Aggregates",
+        "domain": "Macroeconomic Statistics",
+        "description": "System of National Accounts (SNA 2008), Gross Domestic Product (GDP), Gross Value Added (GVA), Supply and Use Tables (SUT), institutional sector accounts, and capital formation estimation.",
+        "required_level": 85.0,
+        "weight": 1.3
+    },
+    {
+        "code": "STAT_COMPUTE",
+        "name": "Statistical Computing & Data Science",
+        "domain": "Computing & Informatics",
+        "description": "Statistical programming using Python, R, STATA, and SQL for data transformation, unit-level microdata processing, econometric modeling, automated report pipelines, and reproducible research.",
+        "required_level": 80.0,
+        "weight": 1.2
+    },
+    {
+        "code": "STAT_PRICE_IND",
+        "name": "Price Statistics & Index Numbers",
+        "domain": "Price & Industrial Statistics",
+        "description": "Compilation methodology of Consumer Price Index (CPI), Index of Industrial Production (IIP), Wholesale Price Index (WPI), Laspeyres/Paasche index formulations, and basket revision protocols.",
+        "required_level": 75.0,
+        "weight": 1.0
+    },
+    {
+        "code": "STAT_LABOUR",
+        "name": "Labour & Demographic Statistics",
+        "domain": "Socioeconomic Statistics",
+        "description": "Periodic Labour Force Survey (PLFS) concepts, Usual Principal & Subsidiary Status (UPSS), Current Weekly Status (CWS), Labour Force Participation Rate (LFPR), Worker Population Ratio (WPR), and unemployment metrics.",
+        "required_level": 80.0,
+        "weight": 1.1
+    },
+    {
+        "code": "STAT_DATA_GOV",
+        "name": "Data Management & eSankhyiki Governance",
+        "domain": "Data Governance",
+        "description": "MoSPI National Metadata Standards, eSankhyiki portal data architecture, microdata anonymization, FAIR data principles, API-based dissemination, and open government data security.",
+        "required_level": 75.0,
+        "weight": 1.0
+    },
+    {
+        "code": "STAT_QUALITY",
+        "name": "Statistical Quality Assurance & Audit",
+        "domain": "Quality & Standards",
+        "description": "United Nations Fundamental Principles of Official Statistics, National Quality Assurance Frameworks (NQAF), data consistency auditing, imputation methods, and field survey supervision protocols.",
+        "required_level": 80.0,
+        "weight": 1.1
+    },
+    {
+        "code": "STAT_VIZ_COMM",
+        "name": "Data Visualization & Official Communication",
+        "domain": "Dissemination",
+        "description": "Visual storytelling for policy makers, interactive dashboard development, Sustainable Development Goal (SDG) National Indicator reporting, statistical press release drafting, and public data literacy.",
+        "required_level": 70.0,
+        "weight": 0.9
+    },
+    {
+        "code": "STAT_IND_AGRI",
+        "name": "Industrial & Enterprise Statistics",
+        "domain": "Enterprise Statistics",
+        "description": "Annual Survey of Industries (ASI) factory frame, NIC/NPC classifications, invested capital estimation, Gross Output, Net Value Added calculation in organized manufacturing, and service sector enterprise surveys.",
+        "required_level": 75.0,
+        "weight": 1.0
+    }
+]
+
+BASELINE_QUESTIONS = [
+    {
+        "id": 1,
+        "competency_code": "STAT_SURVEY",
+        "competency_name": "Survey Methodology & Sampling Design",
+        "domain": "Survey Operations",
+        "difficulty": "Intermediate",
+        "question_text": "In the National Sample Survey (NSS) multi-stage sampling design for rural areas, what generally serves as the First Stage Unit (FSU)?",
+        "options": [
+            {"key": "A", "text": "Individual Households"},
+            {"key": "B", "text": "Census Villages (or Panchayat Wards)"},
+            {"key": "C", "text": "Districts (Administrative boundaries)"},
+            {"key": "D", "text": "Agricultural parcels of land"}
+        ],
+        "correct_option": "B",
+        "explanation": "In large-scale rural sample surveys in India (such as NSS / PLFS), census villages (or sub-units in large villages) are selected as First Stage Units (FSUs), followed by households as Ultimate Stage Units (USUs)."
+    },
+    {
+        "id": 2,
+        "competency_code": "STAT_NAT_ACC",
+        "competency_name": "National Accounts Statistics & Macro Aggregates",
+        "domain": "Macroeconomic Statistics",
+        "difficulty": "Intermediate",
+        "question_text": "According to the SNA 2008 framework adopted by MoSPI, what is the exact relationship between Gross Value Added (GVA) at Basic Prices and Gross Domestic Product (GDP) at Market Prices?",
+        "options": [
+            {"key": "A", "text": "GDP at Market Prices = GVA at Basic Prices + Product Taxes - Product Subsidies"},
+            {"key": "B", "text": "GDP at Market Prices = GVA at Basic Prices - Production Taxes + Production Subsidies"},
+            {"key": "C", "text": "GDP at Market Prices = GVA at Factor Cost + Direct Taxes"},
+            {"key": "D", "text": "GDP at Market Prices = GVA at Basic Prices + Net Factor Income from Abroad"}
+        ],
+        "correct_option": "A",
+        "explanation": "Under the current National Accounts series (Base 2011-12 onwards aligned with SNA 2008), GDP at Market Prices is derived by adding Product Taxes and subtracting Product Subsidies from GVA at Basic Prices."
+    },
+    {
+        "id": 3,
+        "competency_code": "STAT_COMPUTE",
+        "competency_name": "Statistical Computing & Data Science",
+        "domain": "Computing & Informatics",
+        "difficulty": "Intermediate",
+        "question_text": "When analyzing microdata survey weights (multiplier) in Python using pandas to compute estimated population totals, which operation is methodologically correct?",
+        "options": [
+            {"key": "A", "text": "df['variable'].mean() directly on the unweighted sample"},
+            {"key": "B", "text": "(df['variable'] * df['weight']).sum() / df['weight'].sum() for weighted mean, and (df['variable'] * df['weight']).sum() for total"},
+            {"key": "C", "text": "df['variable'].sum() multiplied by total sample size"},
+            {"key": "D", "text": "Standardizing the weights using z-score before calculating sum"}
+        ],
+        "correct_option": "B",
+        "explanation": "In survey analysis with sampling multipliers/weights, the estimated population total is the sum of weighted values (value * weight), and the estimated weighted mean is the weighted sum divided by the sum of weights."
+    },
+    {
+        "id": 4,
+        "competency_code": "STAT_PRICE_IND",
+        "competency_name": "Price Statistics & Index Numbers",
+        "domain": "Price & Industrial Statistics",
+        "difficulty": "Intermediate",
+        "question_text": "Which formula is predominantly utilized for the compilation of the all-India Consumer Price Index (CPI) and Index of Industrial Production (IIP) by MoSPI?",
+        "options": [
+            {"key": "A", "text": "Paasche's Current Weighted Formula"},
+            {"key": "B", "text": "Fisher's Ideal Index Formula"},
+            {"key": "C", "text": "Laspeyres Base Weighted Formula"},
+            {"key": "D", "text": "Marshall-Edgeworth Formula"}
+        ],
+        "correct_option": "C",
+        "explanation": "India's official CPI and IIP are compiled using the Laspeyres index formulation with fixed base year weights to ensure monthly comparability across commodity baskets."
+    },
+    {
+        "id": 5,
+        "competency_code": "STAT_LABOUR",
+        "competency_name": "Labour & Demographic Statistics",
+        "domain": "Socioeconomic Statistics",
+        "difficulty": "Intermediate",
+        "question_text": "In the Periodic Labour Force Survey (PLFS), how is a person classified as 'Employed' under the Current Weekly Status (CWS) approach?",
+        "options": [
+            {"key": "A", "text": "Worked for at least 183 days during the preceding 365 days"},
+            {"key": "B", "text": "Worked for at least 1 hour on any 1 day during the 7-day reference period"},
+            {"key": "C", "text": "Worked for at least 8 hours every day during the reference month"},
+            {"key": "D", "text": "Was actively seeking work throughout the preceding 30 days"}
+        ],
+        "correct_option": "B",
+        "explanation": "Under the Current Weekly Status (CWS) methodology in PLFS, a person is considered employed if they performed economic activity for at least 1 hour on any one day during the 7-day reference period."
+    },
+    {
+        "id": 6,
+        "competency_code": "STAT_DATA_GOV",
+        "competency_name": "Data Management & eSankhyiki Governance",
+        "domain": "Data Governance",
+        "difficulty": "Intermediate",
+        "question_text": "What is the primary function of the 'Macro Indicators Module' on the official MoSPI eSankhyiki portal?",
+        "options": [
+            {"key": "A", "text": "Downloading raw un-anonymized personal survey schedules"},
+            {"key": "B", "text": "Providing programmatic API and interactive time-series access for core macroeconomic data (NAS, CPI, IIP, ASI)"},
+            {"key": "C", "text": "Managing civil servant transfers and cadre postings"},
+            {"key": "D", "text": "Hosting general public opinion polls"}
+        ],
+        "correct_option": "B",
+        "explanation": "The Macro Indicators Module of eSankhyiki (esankhyiki.mospi.gov.in) provides filtered time-series data and official REST APIs for major statistical datasets including National Accounts, CPI, and IIP."
+    },
+    {
+        "id": 7,
+        "competency_code": "STAT_QUALITY",
+        "competency_name": "Statistical Quality Assurance & Audit",
+        "domain": "Quality & Standards",
+        "difficulty": "Intermediate",
+        "question_text": "Which principle from the UN Fundamental Principles of Official Statistics emphasizes that official statistical agencies must maintain professional independence from political interference?",
+        "options": [
+            {"key": "A", "text": "Principle 1: Relevance, Impartiality, and Equal Access"},
+            {"key": "B", "text": "Principle 2: Professional Standards and Ethics"},
+            {"key": "C", "text": "Principle 5: Sources of Official Statistics"},
+            {"key": "D", "text": "Principle 8: National Coordination"}
+        ],
+        "correct_option": "B",
+        "explanation": "Principle 2 dictates that statistical agencies decide according to strictly professional considerations, scientific principles, and professional ethics on the methods and procedures for the collection and dissemination of data."
+    },
+    {
+        "id": 8,
+        "competency_code": "STAT_IND_AGRI",
+        "competency_name": "Industrial & Enterprise Statistics",
+        "domain": "Enterprise Statistics",
+        "difficulty": "Intermediate",
+        "question_text": "In the Annual Survey of Industries (ASI), how is Net Value Added (NVA) computed from Gross Output and Total Inputs?",
+        "options": [
+            {"key": "A", "text": "NVA = Gross Output - Total Inputs - Depreciation"},
+            {"key": "B", "text": "NVA = Gross Output + Rent + Interest"},
+            {"key": "C", "text": "NVA = Total Inputs - Fuel Consumption"},
+            {"key": "D", "text": "NVA = Gross Fixed Capital / Working Capital"}
+        ],
+        "correct_option": "A",
+        "explanation": "In ASI accounting, Gross Value Added = Gross Output - Total Inputs. Net Value Added (NVA) is then calculated by deducting the consumption of fixed capital (Depreciation) from GVA."
+    }
+]
+
+RESOURCES_SEED = [
+    {
+        "title": "iGOT Karmayogi: Foundations of Official Statistics in India",
+        "description": "Comprehensive competency building product covering the organizational structure of MoSPI, the Indian Statistical System, National Statistical Commission (NSC) guidelines, and administrative data flows.",
+        "source": "iGOT_Karmayogi",
+        "official_url": "https://igotkarmayogi.gov.in/learn/course/official-statistics-foundations",
+        "resource_type": "CBP_Course",
+        "difficulty": "Foundational",
+        "estimated_duration_mins": 180,
+        "competency_code": "STAT_SURVEY"
+    },
+    {
+        "title": "iGOT Karmayogi: Data Analytics with Python for Government Officers",
+        "description": "Applied course on data wrangling, descriptive statistics, automated data validation, and visual reporting using Python pandas, numpy, and matplotlib.",
+        "source": "iGOT_Karmayogi",
+        "official_url": "https://igotkarmayogi.gov.in/learn/course/python-for-data-analytics",
+        "resource_type": "CBP_Course",
+        "difficulty": "Intermediate",
+        "estimated_duration_mins": 240,
+        "competency_code": "STAT_COMPUTE"
+    },
+    {
+        "title": "iGOT Karmayogi: National Accounts Statistics (SNA 2008) Framework",
+        "description": "Interactive training on GDP estimation methodologies, GVA by economic activity, sequence of accounts, and capital asset measurement.",
+        "source": "iGOT_Karmayogi",
+        "official_url": "https://igotkarmayogi.gov.in/learn/course/national-accounts-sna-2008",
+        "resource_type": "CBP_Course",
+        "difficulty": "Advanced",
+        "estimated_duration_mins": 300,
+        "competency_code": "STAT_NAT_ACC"
+    },
+    {
+        "title": "NSSTA Training Module: Advanced Survey Sampling Techniques",
+        "description": "Official academy curriculum on stratified multistage sampling, allocation of sample sizes across strata, circular systematic sampling, and variance estimation in household surveys.",
+        "source": "NSSTA",
+        "official_url": "https://nssta.gov.in/curriculum/survey-sampling-advanced",
+        "resource_type": "Training_Module",
+        "difficulty": "Advanced",
+        "estimated_duration_mins": 210,
+        "competency_code": "STAT_SURVEY"
+    },
+    {
+        "title": "NSSTA Digital Data Lab: Microdata Processing and Anonymization",
+        "description": "Hands-on laboratory manual on statistical disclosure control (SDC), k-anonymity, top-coding, and noise addition for open statistical datasets.",
+        "source": "NSSTA",
+        "official_url": "https://nssta.gov.in/digital-lab/microdata-processing",
+        "resource_type": "Training_Module",
+        "difficulty": "Intermediate",
+        "estimated_duration_mins": 150,
+        "competency_code": "STAT_DATA_GOV"
+    },
+    {
+        "title": "NSSTA Module: Index Numbers - CPI and IIP Compilation Manual",
+        "description": "Standard operating procedures for price quote validation, geometric mean aggregation at item level, and chained index number calculations.",
+        "source": "NSSTA",
+        "official_url": "https://nssta.gov.in/curriculum/index-numbers-cpi-iip",
+        "resource_type": "Training_Module",
+        "difficulty": "Intermediate",
+        "estimated_duration_mins": 120,
+        "competency_code": "STAT_PRICE_IND"
+    },
+    {
+        "title": "MoSPI eSankhyiki Portal: Data Catalogue & Macro Indicators Guide",
+        "description": "Official documentation for accessing 7 core data products on eSankhyiki, utilizing REST endpoints, and integrating national data with state directorates.",
+        "source": "MoSPI",
+        "official_url": "https://esankhyiki.mospi.gov.in/catalogue",
+        "resource_type": "Dataset",
+        "difficulty": "Intermediate",
+        "estimated_duration_mins": 90,
+        "competency_code": "STAT_DATA_GOV"
+    },
+    {
+        "title": "MoSPI Periodic Labour Force Survey (PLFS) Annual Report & Methodology",
+        "description": "Official technical report detailing sampling design, rotation scheme, activity definitions, UPSS vs CWS estimation formulas, and key labour indicators.",
+        "source": "MoSPI",
+        "official_url": "https://mospi.gov.in/plfs-annual-report-methodology",
+        "resource_type": "Publication",
+        "difficulty": "Intermediate",
+        "estimated_duration_mins": 180,
+        "competency_code": "STAT_LABOUR"
+    },
+    {
+        "title": "MoSPI Annual Survey of Industries (ASI) Concepts & Operational Manual",
+        "description": "Comprehensive reference handbook for industrial classification (NIC-2008), frame maintenance, schedule canvassing, and value added estimation.",
+        "source": "MoSPI",
+        "official_url": "https://mospi.gov.in/asi-concepts-definitions",
+        "resource_type": "Publication",
+        "difficulty": "Foundational",
+        "estimated_duration_mins": 140,
+        "competency_code": "STAT_IND_AGRI"
+    }
+]
