@@ -9,15 +9,16 @@ pydantic-settings>=2.1.0
 email-validator>=2.1.0
 typing-extensions>=4.9.0
 
-# Database & ORM
+# Database & ORM (PostgreSQL / Supabase & SQLite)
 sqlalchemy>=2.0.25
+psycopg2-binary>=2.9.9
 
 # Security, Cryptography & JWT Authentication
 python-jose[cryptography]>=3.3.0
 bcrypt>=4.1.2
 cryptography>=42.0.0
 
-# Async HTTP Client for AI / LLM APIs
+# Async HTTP Client for AI / LLM APIs (Groq & Gemini)
 httpx>=0.26.0
 
 # Document Ingestion & Text Extraction (PDF, DOCX, PPTX)

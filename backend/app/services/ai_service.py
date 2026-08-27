@@ -73,36 +73,13 @@ async def call_llm(
     max_retries = getattr(settings, "LLM_MAX_RETRIES", 2)
     timeout = getattr(settings, "LLM_TIMEOUT_SECONDS", 30.0)
 
-    # 1. Try Grok (xAI) if key provided
-    grok_key = settings.XAI_API_KEY or settings.GROK_API_KEY
-    if grok_key:
-        data = await _post_with_retry(
-            url=f"{settings.XAI_BASE_URL.rstrip('/')}/chat/completions",
-            headers={"Authorization": f"Bearer {grok_key}"},
-            json_payload={
-                "model": settings.GROK_MODEL or "grok-2-latest",
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.3
-            },
-            provider_name="Grok (xAI)",
-            timeout=timeout,
-            max_retries=max_retries
-        )
-        if data and "choices" in data and len(data["choices"]) > 0:
-            content = data["choices"][0]["message"].get("content", "")
-            if content.strip():
-                return content.strip()
-
-    # 2. Try Groq if key provided
+    # 1. Try Groq if key provided (primary)
     if settings.GROQ_API_KEY:
         data = await _post_with_retry(
             url="https://api.groq.com/openai/v1/chat/completions",
             headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
             json_payload={
-                "model": settings.GROQ_MODEL or "llama-3.3-70b-versatile",
+                "model": getattr(settings, "GROQ_MODEL", "llama-3.3-70b-versatile"),
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": prompt}
@@ -118,7 +95,7 @@ async def call_llm(
             if content.strip():
                 return content.strip()
 
-    # 3. Try Gemini if key provided
+    # 2. Try Gemini if key provided (secondary)
     if settings.GEMINI_API_KEY:
         gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={settings.GEMINI_API_KEY}"
         data = await _post_with_retry(
@@ -137,28 +114,6 @@ async def call_llm(
                 content = parts[0]["text"]
                 if content.strip():
                     return content.strip()
-
-    # 4. Try OpenAI if key provided
-    if settings.OPENAI_API_KEY:
-        data = await _post_with_retry(
-            url="https://api.openai.com/v1/chat/completions",
-            headers={"Authorization": f"Bearer {settings.OPENAI_API_KEY}"},
-            json_payload={
-                "model": "gpt-4o-mini",
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.3
-            },
-            provider_name="OpenAI",
-            timeout=timeout,
-            max_retries=max_retries
-        )
-        if data and "choices" in data and len(data["choices"]) > 0:
-            content = data["choices"][0]["message"].get("content", "")
-            if content.strip():
-                return content.strip()
 
     return ""
 
