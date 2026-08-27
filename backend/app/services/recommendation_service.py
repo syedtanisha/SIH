@@ -213,9 +213,9 @@ def get_personalized_learning_path(user_id: int, db: Session) -> LearningPathRes
         ),
         LearningPathMilestone(
             phase_number=7,
-            title="Step 7: Grok AI Adaptive Final Interview",
+            title="Step 7: AI Final Interview",
             domain="Capstone Assessment",
-            description=f"Demonstrate comprehensive competency mastery across India's Official Statistical System in an AI-powered conversational interview.",
+            description="Demonstrate comprehensive competency mastery across India's Official Statistical System in an AI-powered conversational interview.",
             recommended_resource="AI Final Interview Readiness & Multi-Domain Evaluation",
             official_url="/final-interview",
             estimated_hours=1.0,

@@ -45,22 +45,38 @@ export const LearningPathPage = () => {
             <Layers className="w-4 h-4" /> Capacity Roadmap
           </div>
           <div className="flex items-center gap-2">
+            <Link
+              to="/final-interview"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-mospi-900 via-blue-900 to-indigo-900 hover:from-mospi-800 hover:to-indigo-800 text-white text-xs font-bold shadow-md transition"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>Final AI Interview</span>
+            </Link>
             <button
               onClick={fetchLearningPath}
-              className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-mospi-800 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition"
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-mospi-800 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition"
             >
               <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} /> Refresh
             </button>
-            <span className="text-xs font-bold bg-amber-100 text-amber-900 px-3 py-1 rounded-full border border-amber-200">
+            <span className="text-xs font-bold bg-amber-100 text-amber-900 px-3 py-1.5 rounded-full border border-amber-200">
               {progressPct}% Completed
             </span>
           </div>
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-            Personalized Official Statistical Learning Path
-          </h1>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+              Personalized Official Statistical Learning Path
+            </h1>
+            <Link
+              to="/final-interview"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-bold shadow-sm transition"
+            >
+              <Sparkles className="w-4 h-4 text-slate-950" />
+              <span>Final AI Interview</span>
+            </Link>
+          </div>
           {learningPathData && (
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-blue-50 text-blue-800 px-2.5 py-1 rounded-md border border-blue-200">
@@ -100,65 +116,76 @@ export const LearningPathPage = () => {
 
       {/* Milestones List */}
       <div className="space-y-4">
-        {milestones.map((m, idx) => (
-          <div
-            key={idx}
-            className={`rounded-2xl border p-6 transition flex flex-col sm:flex-row items-start justify-between gap-4 ${
-              m.completed
-                ? 'bg-emerald-50/40 border-emerald-200'
-                : 'bg-white border-slate-200 shadow-sm'
-            }`}
-          >
-            <div className="flex items-start gap-4">
-              <button
-                onClick={() => toggleComplete(idx)}
-                className="mt-1 flex-shrink-0 text-slate-400 hover:text-emerald-600 transition"
-                title="Toggle completion status"
-              >
-                {m.completed ? (
-                  <CheckCircle2 className="w-6 h-6 text-emerald-600 fill-emerald-100" />
-                ) : (
-                  <Circle className="w-6 h-6" />
-                )}
-              </button>
-              <div className="space-y-1.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-mospi-700 bg-mospi-50 px-2 py-0.5 rounded border border-mospi-200">
-                    {m.domain}
-                  </span>
-                  {m.estimated_hours && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500">
-                      <Clock className="w-3 h-3" /> {m.estimated_hours} hrs
-                    </span>
-                  )}
-                </div>
-                <h3 className={`text-sm font-bold ${m.completed ? 'text-emerald-950 line-through' : 'text-slate-900'}`}>
-                  {m.title}
-                </h3>
-                <p className="text-xs text-slate-600 leading-relaxed max-w-xl">
-                  {m.description || m.desc}
-                </p>
-                {m.recommended_resource && (
-                  <p className="text-[11px] font-semibold text-mospi-800 bg-slate-50 border border-slate-200 rounded px-2 py-1 inline-block">
-                    Recommended: {m.recommended_resource}
-                  </p>
-                )}
-              </div>
-            </div>
+        {milestones.map((m, idx) => {
+          const isInterview = m.action_type === 'interview' || (m.action_link && m.action_link.includes('final-interview'));
+          const displayTitle = m.title ? m.title.replace('Grok AI Adaptive Final Interview', 'AI Final Interview') : m.title;
 
-            <Link
-              to={m.action_link || m.link || '/hub'}
-              className={`flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition ${
+          return (
+            <div
+              key={idx}
+              className={`rounded-2xl border p-6 transition flex flex-col sm:flex-row items-start justify-between gap-4 ${
                 m.completed
-                  ? 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200'
-                  : 'bg-mospi-900 text-white hover:bg-mospi-800 shadow-sm'
+                  ? 'bg-emerald-50/40 border-emerald-200'
+                  : 'bg-white border-slate-200 shadow-sm'
               }`}
             >
-              <span>{m.completed ? 'Review Step' : 'Start Milestone'}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        ))}
+              <div className="flex items-start gap-4">
+                <button
+                  onClick={() => toggleComplete(idx)}
+                  className="mt-1 flex-shrink-0 text-slate-400 hover:text-emerald-600 transition cursor-pointer"
+                  title="Toggle completion status"
+                >
+                  {m.completed ? (
+                    <CheckCircle2 className="w-6 h-6 text-emerald-600 fill-emerald-100" />
+                  ) : (
+                    <Circle className="w-6 h-6" />
+                  )}
+                </button>
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-mospi-700 bg-mospi-50 px-2 py-0.5 rounded border border-mospi-200">
+                      {m.domain}
+                    </span>
+                    {m.estimated_hours && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500">
+                        <Clock className="w-3 h-3" /> {m.estimated_hours} hrs
+                      </span>
+                    )}
+                  </div>
+                  <h3 className={`text-sm font-bold ${m.completed ? 'text-emerald-950 line-through' : 'text-slate-900'}`}>
+                    {displayTitle}
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed max-w-xl">
+                    {m.description || m.desc}
+                  </p>
+                  {m.recommended_resource && (
+                    <p className="text-[11px] font-semibold text-mospi-800 bg-slate-50 border border-slate-200 rounded px-2 py-1 inline-block">
+                      Recommended: {m.recommended_resource}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <Link
+                to={m.action_link || m.link || '/hub'}
+                className={`flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm cursor-pointer ${
+                  isInterview
+                    ? 'bg-mospi-900 text-white hover:bg-mospi-800 ring-2 ring-amber-400/50'
+                    : m.completed
+                    ? 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200'
+                    : 'bg-mospi-900 text-white hover:bg-mospi-800'
+                }`}
+              >
+                <span>
+                  {isInterview
+                    ? (m.completed ? 'Review Final Interview' : 'Final Interview')
+                    : (m.completed ? 'Review Step' : 'Start Milestone')}
+                </span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

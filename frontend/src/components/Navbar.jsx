@@ -47,22 +47,23 @@ export const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Brand Logo */}
-          <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-lg bg-mospi-900 flex items-center justify-center text-white font-bold shadow-md group-hover:bg-mospi-800 transition">
-              <span className="text-amber-400 text-lg">सं</span>
+          <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center gap-2.5 group flex-shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-mospi-900 flex items-center justify-center text-white font-bold shadow-md group-hover:bg-mospi-800 transition flex-shrink-0">
+              <span className="text-amber-400 text-lg font-black">सं</span>
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold uppercase tracking-wider text-mospi-700 bg-mospi-50 px-1.5 py-0.5 rounded border border-mospi-200">
+            <div className="flex flex-col justify-center">
+              <div className="flex items-center gap-1.5 leading-none">
+                <span className="text-base font-extrabold text-slate-900 tracking-tight">StatLearn AI</span>
+                <span className="text-[10px] font-bold text-mospi-800 bg-mospi-50 px-1.5 py-0.5 rounded border border-mospi-200 uppercase tracking-wider hidden sm:inline-block">
                   MoSPI • NSSTA
                 </span>
-                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-medium px-1 rounded">
-                  Official Cadre Platform
+                <span className="text-[10px] bg-emerald-50 text-emerald-800 font-semibold px-1.5 py-0.5 rounded border border-emerald-200 hidden md:inline-block">
+                  Official Cadre
                 </span>
               </div>
-              <h1 className="text-base font-bold text-slate-900 tracking-tight leading-tight">
-                StatLearn AI <span className="text-xs font-normal text-slate-500 hidden sm:inline">| Official Statistical Capacity</span>
-              </h1>
+              <span className="text-[11px] font-medium text-slate-500 mt-0.5">
+                Official Statistical Capacity Building
+              </span>
             </div>
           </Link>
 
