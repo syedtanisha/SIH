@@ -230,7 +230,7 @@ def get_personalized_learning_path(user_id: int, db: Session) -> LearningPathRes
     progress_pct = int(round((completed_count / len(milestones)) * 100))
 
     curation_note = (
-        f"Grok AI Personalized Learning Roadmap for {user.full_name if user else 'Officer'} ({user.designation if user else 'Cadre'}, {user.department if user else 'MoSPI'}): "
+        f"AI Personalized Learning Roadmap for {user.full_name if user else 'Officer'} ({user.designation if user else 'Cadre'}, {user.department if user else 'MoSPI'}): "
         f"This 7-step progression is synchronized with your role-specific benchmarks. "
         f"Current focus: Bridge the {top_gap.gap if top_gap else 0}% gap in {top_gap_name} to elevate your overall readiness score to {profile.overall_readiness_score}%."
     )

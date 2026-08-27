@@ -290,12 +290,12 @@ Provide a concise, motivating, and pedagogical performance analysis (3-4 sentenc
     # Fallback qualitative feedback
     if mistakes:
         return (
-            f"Grok AI Evaluation: You achieved {score_pct}% ({total_correct}/{total_questions} correct) on '{quiz_title}'. "
+            f"AI Evaluation: You achieved {score_pct}% ({total_correct}/{total_questions} correct) on '{quiz_title}'. "
             f"Your competency in '{competency_name}' improved by +{delta}% (from {before_score}% to {after_score}%). "
-            f"Review the pedagogical explanations below for the {len(mistakes)} questions you missed to reinforce official MoSPI definitions before proceeding to the next tutorial module."
+            f"Review the question explanations below to reinforce official methodology before the next milestone."
         )
     return (
-        f"Grok AI Evaluation: Outstanding mastery! You achieved a perfect score of {score_pct}% ({total_correct}/{total_questions} correct) on '{quiz_title}'. "
+        f"AI Evaluation: Outstanding mastery! You achieved a perfect score of {score_pct}% ({total_correct}/{total_questions} correct) on '{quiz_title}'. "
         f"Your official competency in '{competency_name}' has increased to {after_score}% (+{delta}% learning gain). "
         f"Your statistical reasoning aligns completely with official guidelines. Proceed to the next milestone in your learning path!"
     )
@@ -838,7 +838,7 @@ Return ONLY valid JSON with this exact structure:
     next_diff = "Advanced" if score >= 8 else ("Intermediate" if score >= 5 else "Beginner")
 
     eval_text = (
-        f"Grok AI Evaluation: Strong demonstration ({score}/10). Your answer demonstrates practical understanding of {domain or competency or 'the statistical discipline'} "
+        f"AI Evaluation: Strong demonstration ({score}/10). Your answer demonstrates practical understanding of {domain or competency or 'the statistical discipline'} "
         f"within India's Official Statistical System. Your reasoning aligns with official Ministry guidelines."
     )
 
@@ -928,7 +928,7 @@ Cadre Grade: {cadre_grade}
 Assessed Questions & Scores:
 {chr(10).join([f"- {r.get('domain', 'Domain')}: {r.get('question', '')[:60]}... -> Score {r.get('score', 7)}/10" for r in results])}
 
-Provide an authoritative 3-4 sentence official executive synthesis from Grok AI evaluating the officer's readiness for high-stakes statistical duties, noting key operational strengths and specific capacity-building recommendations.
+Provide an authoritative 3-4 sentence official executive synthesis evaluating the officer's readiness for high-stakes statistical duties, noting key operational strengths and specific capacity-building recommendations.
 """
 
     ai_narrative = await call_llm(
@@ -938,7 +938,7 @@ Provide an authoritative 3-4 sentence official executive synthesis from Grok AI 
 
     if not ai_narrative or len(ai_narrative.strip()) < 30:
         ai_narrative = (
-            f"Grok AI Executive Assessment: {officer_name} has demonstrated commendable technical competence across all evaluated disciplines, "
+            f"AI Executive Assessment: {officer_name} has demonstrated commendable technical competence across all evaluated disciplines, "
             f"achieving an overall rating of {avg_score}/10 ({readiness_pct}% Readiness). "
             f"Their reasoning shows strong alignment with SNA 2008 macroeconomic frameworks, NSS multi-stage sampling protocols, and UN NQAF standards. "
             f"The officer is fully qualified to lead data production and validation pipelines within {division}."

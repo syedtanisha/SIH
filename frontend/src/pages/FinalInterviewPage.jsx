@@ -575,7 +575,7 @@ export function FinalInterviewPage() {
                   {evaluating ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin text-amber-400" />
-                      <span>Grok AI Evaluating Answer...</span>
+                      <span>AI Evaluating Answer...</span>
                     </>
                   ) : (
                     <>
