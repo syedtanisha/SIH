@@ -640,46 +640,31 @@ async def evaluate_final_interview_answer(
     """
 
     prompt = f"""
-You are a senior interviewer for India's Official Statistical System.
+You are a senior, rigorous evaluator for India's Official Statistical System (MoSPI/NSSTA).
 
-Evaluate the following professional interview answer.
+Evaluate the following candidate interview answer.
 
-Competency:
-{competency}
+Competency: {competency}
+Domain: {domain}
+Difficulty: {difficulty}
+Interview Question: {question}
+Candidate Answer: {answer}
 
-Domain:
-{domain}
+CRITICAL RULES:
+1. RIGOROUS VALIDATION: If the candidate's answer is gibberish, off-topic, random typing (e.g., 'twg take care', 'asdf', 'test'), too brief, or completely misses the statistical topic, you MUST award a score of 0, 1, or 2 out of 10.
+2. If the answer is irrelevant or gibberish:
+   - "score": 1
+   - "evaluation": "Inadequate response (1/10). The submitted answer does not address the required statistical methodology."
+   - "strengths": []
+   - "weaknesses": ["The response lacks relevant statistical terminology, definitions, or methodology required for this question.", "Please provide a substantive technical explanation."]
+   - "next_difficulty": "Beginner"
+3. If the answer is genuine, grade accurately:
+   - 9-10: Complete mastery with exact formulas/definitions and practical MoSPI application.
+   - 7-8: Solid technical answer touching on main concepts.
+   - 4-6: Partial / incomplete understanding with missing elements.
+   - 0-3: Incorrect, irrelevant, or minimal text.
 
-Question difficulty:
-{difficulty}
-
-Interview question:
-{question}
-
-Candidate answer:
-{answer}
-
-Evaluate the answer based on:
-1. Accuracy
-2. Understanding of the statistical concept
-3. Practical application
-4. Reasoning
-5. Professional communication
-
-Scoring:
-- 9-10: Excellent
-- 7-8: Strong
-- 5-6: Moderate
-- 3-4: Weak
-- 0-2: Very weak
-
-Determine the next difficulty:
-- Score 8-10 → Advanced
-- Score 5-7 → Intermediate
-- Score 0-4 → Beginner
-
-Return ONLY valid JSON using exactly this structure:
-
+Return ONLY valid JSON with this exact structure:
 {{
     "score": 0,
     "evaluation": "",
@@ -692,9 +677,8 @@ Return ONLY valid JSON using exactly this structure:
     raw = await call_llm(
         prompt,
         system_prompt=(
-            "You are a senior professional interviewer "
-            "specializing in India's Official Statistical System. "
-            "Evaluate answers fairly, specifically, and constructively."
+            "You are a senior, rigorous psychometric examiner for India's Ministry of Statistics & Programme Implementation. "
+            "Evaluate candidates strictly and honestly. Penalize gibberish, irrelevant text, or missing concepts with low scores (0-2/10)."
         )
     )
 
@@ -702,18 +686,19 @@ Return ONLY valid JSON using exactly this structure:
         try:
             result = json.loads(clean_json_string(raw))
             if isinstance(result, dict) and "score" in result:
-                # Ensure all required fields exist
+                raw_sc = max(0, min(10, int(result.get("score", 7))))
+                # If LLM properly penalized with low score, ensure empty strengths
+                llm_strengths = result.get("strengths") or []
+                if raw_sc <= 3:
+                    llm_strengths = []
                 return {
-                    "score": max(1, min(10, int(result.get("score", 7)))),
-                    "evaluation": result.get("evaluation") or "Demonstrates strong foundational understanding of official statistical methodology.",
-                    "strengths": result.get("strengths") if isinstance(result.get("strengths"), list) and len(result["strengths"]) > 0 else [
-                        "Clear articulation of the primary statistical concept and its role in official governance.",
-                        "Good structural reasoning aligned with Ministry of Statistics guidelines."
+                    "score": raw_sc,
+                    "evaluation": result.get("evaluation") or ("Inadequate response." if raw_sc <= 3 else "Solid understanding of statistical concepts."),
+                    "strengths": llm_strengths,
+                    "weaknesses": result.get("weaknesses") if isinstance(result.get("weaknesses"), list) and len(result["weaknesses"]) > 0 else [
+                        "Please provide substantive explanations referencing official Ministry guidelines."
                     ],
-                    "weaknesses": result.get("weaknesses") if isinstance(result.get("weaknesses"), list) else [
-                        "Could incorporate specific field survey schedules or division circulars for added depth."
-                    ],
-                    "next_difficulty": result.get("next_difficulty", "Advanced" if int(result.get("score", 7)) >= 7 else "Intermediate")
+                    "next_difficulty": result.get("next_difficulty", "Beginner" if raw_sc <= 4 else ("Advanced" if raw_sc >= 8 else "Intermediate"))
                 }
         except Exception as e:
             print(f"[AI Service] Interview answer evaluation LLM parse failed: {e}")
@@ -724,12 +709,47 @@ Return ONLY valid JSON using exactly this structure:
     comp_code = (competency or "").upper().strip()
     word_count = len(answer.split())
     
-    score = 6
+    # -------------------------------------------------------------
+    # 0. GIBBERISH / OFF-TOPIC / MINIMAL ANSWER DETECTION
+    # -------------------------------------------------------------
+    # All valid statistical terms across official domains
+    all_stat_keywords = [
+        "gdp", "gva", "output", "consumption", "sna", "nad", "mca", "gfcf", "capital",
+        "sample", "survey", "strata", "stratified", "fsu", "usu", "multiplier", "weight",
+        "probability", "variance", "cluster", "plfs", "nss", "sdrd", "non-sampling", "bias",
+        "cpi", "iip", "index", "price", "laspeyres", "basket", "inflation", "quotation", "esd",
+        "python", "pandas", "microdata", "vectorization", "chunk", "anonymization", "sql",
+        "quality", "audit", "nqaf", "un", "confidentiality", "impartiality", "transparency",
+        "asi", "factory", "bidi", "industry", "agriculture", "yield", "upss", "cws", "labor",
+        "sdg", "nif", "indicator", "dissemination", "metadata", "esankhyiki", "standard error",
+        "mean", "rate", "ratio", "census", "schedule", "investigator", "canvassing"
+    ]
+
+    matched_global_terms = [k for k in all_stat_keywords if k in ans_lower]
+
+    # If answer is pure gibberish, too short, or has zero statistical keywords
+    if word_count < 4 or len(ans_lower) < 15 or len(matched_global_terms) == 0:
+        return {
+            "score": 1,
+            "evaluation": (
+                f"Inadequate / Irrelevant Response (1/10). The submitted text does not contain relevant statistical concepts, "
+                f"formulas, or valid methodology for this question on {domain or 'Official Statistics'}. "
+                f"Official cadre examinations require substantive, technically accurate explanations referencing Ministry guidelines."
+            ),
+            "strengths": [],
+            "weaknesses": [
+                "The response lacked technical terminology, formulas, or standard operating procedures required for this topic.",
+                "Please provide a substantive, professional explanation addressing the core statistical methodology."
+            ],
+            "next_difficulty": "Beginner"
+        }
+
+    score = 5
     if word_count >= 15:
         score += 1
-    if word_count >= 35:
+    if word_count >= 30:
         score += 1
-    if word_count >= 60:
+    if word_count >= 55:
         score += 1
 
     strengths = []

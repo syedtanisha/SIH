@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Award, 
@@ -591,26 +591,48 @@ export function FinalInterviewPage() {
           {/* AI Evaluation Box */}
           {evaluation && (
             <div className="space-y-4 pt-2 animate-in fade-in duration-150">
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-50/90 to-indigo-50/60 border border-blue-200/80 space-y-3">
+              <div className={`p-5 rounded-2xl border space-y-3 ${
+                evaluation.score <= 3
+                  ? 'bg-rose-50/90 border-rose-200 text-rose-950'
+                  : evaluation.score >= 8
+                  ? 'bg-emerald-50/90 border-emerald-200 text-emerald-950'
+                  : 'bg-blue-50/90 border-blue-200 text-blue-950'
+              }`}>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-600" /> AI Evaluation Feedback
+                  <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                    evaluation.score <= 3 ? 'text-rose-900' : (evaluation.score >= 8 ? 'text-emerald-900' : 'text-blue-900')
+                  }`}>
+                    {evaluation.score <= 3 ? (
+                      <>
+                        <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                        <span>AI Diagnostic: Needs Remediation</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                        <span>AI Evaluation Feedback</span>
+                      </>
+                    )}
                   </span>
                   <span className={`text-sm font-black px-3 py-1 rounded-full ${
-                    evaluation.score >= 8 ? 'bg-emerald-100 text-emerald-950 border border-emerald-200' : 'bg-blue-100 text-blue-950 border border-blue-200'
+                    evaluation.score <= 3
+                      ? 'bg-rose-100 text-rose-950 border border-rose-300'
+                      : evaluation.score >= 8
+                      ? 'bg-emerald-100 text-emerald-950 border border-emerald-300'
+                      : 'bg-blue-100 text-blue-950 border border-blue-300'
                   }`}>
                     {evaluation.score} / 10 Score
                   </span>
                 </div>
 
-                <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium">
+                <p className="text-xs sm:text-sm leading-relaxed font-medium">
                   {evaluation.evaluation}
                 </p>
 
                 {/* Next Difficulty Hint */}
                 {evaluation.next_difficulty && (
-                  <div className="text-[11px] font-semibold text-indigo-900 bg-white/70 px-2.5 py-1 rounded-md border border-indigo-100 inline-block">
-                    Target Difficulty for Next Step: <span className="font-bold">{evaluation.next_difficulty}</span>
+                  <div className="text-[11px] font-semibold bg-white/80 px-2.5 py-1 rounded-md border border-slate-200 text-slate-800 inline-block">
+                    Adaptive Question Level: <span className="font-bold">{evaluation.next_difficulty}</span>
                   </div>
                 )}
               </div>
