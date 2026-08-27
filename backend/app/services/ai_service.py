@@ -67,7 +67,7 @@ async def call_llm(
 ) -> str:
     """
     Multi-provider LLM executor supporting:
-    1. Grok (xAI) -> 2. Groq -> 3. Gemini -> 4. OpenAI -> 5. Fallback
+    1. Groq (Primary) -> 2. Gemini (Secondary) -> 3. Deterministic Fallback
     With exponential backoff and transient failure retries.
     """
     max_retries = getattr(settings, "LLM_MAX_RETRIES", 2)
