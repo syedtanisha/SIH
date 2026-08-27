@@ -45,8 +45,8 @@
                      ▼                   ▼   ▼                   ▼   ▼                          ▼
               [Relational DB]         [AI Engine]          [Document Parser]        [Govt Resource Hub]
            Users, Competencies,      Multi-Provider       PDF, DOCX, PPTX, TXT      iGOT Karmayogi (FRAC),
-           Assessments, Quizzes,     (Groq / Gemini /     Text Extraction &         NSSTA Greater Noida,
-           Progress History          OpenAI / Fallback)   Chunking                  MoSPI & eSankhyiki
+           Assessments, Quizzes,     (Grok / Groq /       Threadpool Offloaded      NSSTA Greater Noida,
+           Progress History          Gemini / OpenAI)     Extraction & Chunking     MoSPI & eSankhyiki
 ```
 
 ---
@@ -59,11 +59,16 @@
 
 ---
 
-### Step 1: Start Backend
-```powershell
-cd mospi-statlearn\backend
-# Activate virtual environment
-.\.venv\Scripts\Activate.ps1
+### Step 1: Backend Setup
+```bash
+cd backend
+
+# Copy environment template and configure secrets
+cp .env.example .env
+
+# Install dependencies
+pip install -r requirements.txt
+
 # Start FastAPI server with Uvicorn
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
@@ -72,9 +77,13 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 ---
 
-### Step 2: Start Frontend
-```powershell
-cd mospi-statlearn\frontend
+### Step 2: Frontend Setup
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
 # Start Vite development server
 npm run dev
 ```
@@ -82,12 +91,10 @@ npm run dev
 
 ---
 
-## 🔑 Demo Officer Account
-* **Email**: `test_iss_officer@gov.in`
-* **Password**: `SecurePassword123!`
-* **Name**: Dr. Rajesh Kumar (Deputy Director, National Accounts Division)
-
-*(Or register any new officer cadre profile directly via `/register`)*
+## 🔑 User Authentication & Testing
+Register any new officer cadre profile directly via the registration portal (`/register`):
+* **Supported Cadres**: Indian Statistical Service (ISS), Subordinate Statistical Service (SSS), State DES, Field Operations Division (FOD).
+* **Role-Based Access**: Standard users receive the `user` role; administrative endpoints (`/api/v1/admin/*`) require the `admin` role.
 
 ---
 
@@ -105,14 +112,13 @@ npm run dev
 ---
 
 ## 🧪 Testing & Verification
-Run the backend test suite:
-```powershell
-cd mospi-statlearn\backend
-.\.venv\Scripts\python.exe -m pytest app/tests
+Run the backend test suite with `pytest`:
+```bash
+cd backend
+python -m pytest
 ```
 
-Run the complete 12-step End-to-End verification script:
-```powershell
-cd mospi-statlearn
-backend\.venv\Scripts\python.exe verify_e2e.py
+Run the complete 20-stage End-to-End verification:
+```bash
+python verify_e2e.py
 ```

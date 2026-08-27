@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
 class Settings(BaseSettings):
@@ -10,14 +10,19 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = "sqlite:///./statlearn.db"
 
-    GROK_API_KEY: Optional[str] = None
+    # LLM Provider Configuration
     XAI_API_KEY: Optional[str] = None
-    GROK_MODEL: str = "grok-2-latest"
+    XAI_MODEL: str = "grok-2-latest"
     XAI_BASE_URL: str = "https://api.x.ai/v1"
+    GROK_API_KEY: Optional[str] = None  # Legacy alias for backward compatibility
+    GROK_MODEL: str = "grok-2-latest"
+
     GROQ_API_KEY: Optional[str] = None
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
+
     GEMINI_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
+
     AI_PROVIDER: str = "auto"
     LLM_MAX_RETRIES: int = 2
     LLM_TIMEOUT_SECONDS: float = 30.0
@@ -29,8 +34,10 @@ class Settings(BaseSettings):
     IGOT_CLIENT_SECRET: Optional[str] = None
     IGOT_SANDBOX_MODE: bool = True
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore"
+    )
 
 settings = Settings()

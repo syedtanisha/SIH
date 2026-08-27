@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session, selectinload
 from typing import List
 from ..db.database import get_db
 from ..models.models import Quiz, QuizQuestion, User
@@ -25,10 +25,20 @@ async def generate_quiz(
 
 @router.get("", response_model=List[QuizOut])
 def list_my_quizzes(
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    quizzes = db.query(Quiz).filter(Quiz.user_id == current_user.id).order_by(Quiz.created_at.desc()).all()
+    quizzes = (
+        db.query(Quiz)
+        .options(selectinload(Quiz.questions))
+        .filter(Quiz.user_id == current_user.id)
+        .order_by(Quiz.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+        .all()
+    )
     results = []
     for q in quizzes:
         questions_out = [
@@ -63,7 +73,12 @@ def get_quiz(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    q = db.query(Quiz).filter(Quiz.id == quiz_id).first()
+    q = (
+        db.query(Quiz)
+        .options(selectinload(Quiz.questions))
+        .filter(Quiz.id == quiz_id)
+        .first()
+    )
     if not q:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found.")
     

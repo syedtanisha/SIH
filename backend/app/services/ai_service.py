@@ -2,9 +2,12 @@ import json
 import re
 import asyncio
 import random
+import logging
 import httpx
 from typing import List, Dict, Any, Optional
 from ..core.config import settings
+
+logger = logging.getLogger(__name__)
 
 def clean_json_string(raw: str) -> str:
     """Strip markdown code blocks or trailing characters to obtain valid JSON."""
@@ -38,23 +41,23 @@ async def _post_with_retry(
                 if res.status_code in (429, 500, 502, 503, 504):
                     if attempt < max_retries:
                         backoff = delay * (2 ** attempt) + random.uniform(0.05, 0.2)
-                        print(f"[AI Service] {provider_name} returned status {res.status_code}. Retrying in {backoff:.2f}s (attempt {attempt+1}/{max_retries})...")
+                        logger.warning(f"[AI Service] {provider_name} returned status {res.status_code}. Retrying in {backoff:.2f}s (attempt {attempt+1}/{max_retries})...")
                         await asyncio.sleep(backoff)
                         continue
                 if res.status_code == 200:
                     return res.json()
                 else:
-                    print(f"[AI Service] {provider_name} returned non-200 status code: {res.status_code}")
+                    logger.warning(f"[AI Service] {provider_name} returned non-200 status code: {res.status_code}")
                     return None
         except (httpx.TimeoutException, httpx.ConnectError, httpx.NetworkError) as e:
             if attempt < max_retries:
                 backoff = delay * (2 ** attempt) + random.uniform(0.05, 0.2)
-                print(f"[AI Service] {provider_name} connection/timeout error: {type(e).__name__}. Retrying in {backoff:.2f}s (attempt {attempt+1}/{max_retries})...")
+                logger.warning(f"[AI Service] {provider_name} connection/timeout error: {type(e).__name__}. Retrying in {backoff:.2f}s (attempt {attempt+1}/{max_retries})...")
                 await asyncio.sleep(backoff)
             else:
-                print(f"[AI Service] {provider_name} exhausted all {max_retries+1} attempts: {type(e).__name__}")
+                logger.error(f"[AI Service] {provider_name} exhausted all {max_retries+1} attempts: {type(e).__name__}")
         except Exception as e:
-            print(f"[AI Service] {provider_name} unexpected error: {type(e).__name__}")
+            logger.error(f"[AI Service] {provider_name} unexpected error: {type(e).__name__}")
             break
     return None
 
@@ -250,7 +253,7 @@ Requirements:
                 if len(validated_questions) >= min(num_questions, 2):
                     return validated_questions[:num_questions]
         except Exception as e:
-            print(f"[AI Service] Error parsing LLM MCQ output: {e}")
+            logger.error(f"[AI Service] Error parsing LLM MCQ output: {e}")
 
     # Fallback to deterministic contextual question generator
     return generate_mcqs_from_text(
@@ -736,7 +739,7 @@ Return ONLY valid JSON using exactly this structure:
                     "next_difficulty": str(result.get("next_difficulty", "Intermediate"))
                 }
         except Exception as e:
-            print(f"[AI Service] Interview answer evaluation failed: {e}")
+            logger.error(f"[AI Service] Interview answer evaluation failed: {e}")
 
     # Fallback evaluation
     ans_len = len((answer or "").strip())

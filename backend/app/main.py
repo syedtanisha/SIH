@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -17,6 +18,9 @@ from .routers import (
     admin,
     final_interview
 )
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Initialize database tables
 Base.metadata.create_all(bind=engine)
@@ -67,9 +71,9 @@ def seed_initial_data():
                 )
                 db.add(comp)
             db.commit()
-            print("[Startup] Seeded 9 official statistical competencies.")
+            logger.info("[Startup] Seeded 9 official statistical competencies.")
 
-        # 2. Seed Resources
+        # 2. Seed Resources and Mappings atomically in batch
         res_count = db.query(LearningResource).count()
         if res_count == 0:
             all_comps = {c.code: c for c in db.query(Competency).all()}
@@ -84,8 +88,7 @@ def seed_initial_data():
                     estimated_duration_mins=r_data["estimated_duration_mins"]
                 )
                 db.add(res)
-                db.commit()
-                db.refresh(res)
+                db.flush()
 
                 comp_code = r_data.get("competency_code")
                 if comp_code and comp_code in all_comps:
@@ -95,10 +98,11 @@ def seed_initial_data():
                         relevance_score=1.0
                     )
                     db.add(mapping)
-                    db.commit()
-            print("[Startup] Seeded official iGOT, NSSTA, and MoSPI resources.")
+            db.commit()
+            logger.info("[Startup] Atomically seeded official iGOT, NSSTA, and MoSPI resources.")
     except Exception as e:
-        print(f"[Startup] Error seeding initial data: {e}")
+        db.rollback()
+        logger.error(f"[Startup] Error seeding initial data: {e}")
     finally:
         db.close()
 

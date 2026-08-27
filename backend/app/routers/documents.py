@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
+from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 from typing import List
 from ..db.database import get_db
@@ -32,7 +33,7 @@ async def upload_document(
             detail="File has no extension. Allowed formats: PDF, DOCX, DOC, PPTX, PPT, TXT."
         )
 
-    file_ext = clean_filename.split(".")[-1].lower()
+    file_ext = clean_filename.rsplit(".", 1)[-1].lower()
     if file_ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -60,9 +61,9 @@ async def upload_document(
             detail="File size exceeds the 25MB maximum limit."
         )
 
-    # 3. Extract text safely
+    # 3. Extract text safely offloaded to worker threadpool
     try:
-        extracted_text = process_uploaded_document(clean_filename, content)
+        extracted_text = await run_in_threadpool(process_uploaded_document, clean_filename, content)
     except HTTPException:
         raise
     except Exception as e:
