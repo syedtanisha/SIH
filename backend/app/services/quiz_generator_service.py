@@ -2,7 +2,6 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-import asyncio
 from ..models.models import (
     User,
     Document,
@@ -23,9 +22,9 @@ from ..schemas.quiz import (
     QuizAttemptResultOut,
     QuestionResultDetail
 )
-from .ai_service import generate_mcqs_from_text, generate_grok_quiz_feedback
+from .ai_service import generate_mcqs_from_document_async, generate_grok_quiz_feedback
 
-def create_ai_quiz(request: QuizGenerateRequest, user_id: int, db: Session) -> QuizOut:
+async def create_ai_quiz(request: QuizGenerateRequest, user_id: int, db: Session) -> QuizOut:
     source_text = ""
     doc_obj = None
     target_comp = None
@@ -34,7 +33,6 @@ def create_ai_quiz(request: QuizGenerateRequest, user_id: int, db: Session) -> Q
         res_obj = db.query(LearningResource).filter(LearningResource.id == request.resource_id).first()
         if res_obj:
             source_text = f"Title: {res_obj.title}\nSource: {res_obj.source}\nType: {res_obj.resource_type}\nDescription: {res_obj.description}\nOfficial Curriculum on {res_obj.title}"
-            # Extract target competency from mappings if available
             if res_obj.competency_mappings:
                 target_comp = res_obj.competency_mappings[0].competency
     elif request.document_id:
@@ -57,7 +55,6 @@ def create_ai_quiz(request: QuizGenerateRequest, user_id: int, db: Session) -> Q
     if request.competency_id:
         target_comp = db.query(Competency).filter(Competency.id == request.competency_id).first()
     if not target_comp:
-        # Map by topic keywords or default to STAT_COMPUTE / STAT_SURVEY
         topic_lower = request.topic.lower()
         if "python" in topic_lower or "comput" in topic_lower or "data" in topic_lower:
             target_comp = db.query(Competency).filter(Competency.code == "STAT_COMPUTE").first()
@@ -68,11 +65,12 @@ def create_ai_quiz(request: QuizGenerateRequest, user_id: int, db: Session) -> Q
         else:
             target_comp = db.query(Competency).filter(Competency.code == "STAT_SURVEY").first()
 
-    raw_questions = generate_mcqs_from_text(
+    raw_questions = await generate_mcqs_from_document_async(
         text=source_text,
         topic=request.topic,
         num_questions=request.num_questions,
-        difficulty=request.difficulty
+        difficulty=request.difficulty,
+        competency_code=target_comp.code if target_comp else None
     )
 
     new_quiz = Quiz(
@@ -130,7 +128,12 @@ def create_ai_quiz(request: QuizGenerateRequest, user_id: int, db: Session) -> Q
         questions=q_out_list
     )
 
-def evaluate_quiz_submission(quiz_id: int, user_id: int, submission: QuizSubmitRequest, db: Session) -> QuizAttemptResultOut:
+async def evaluate_quiz_submission(
+    quiz_id: int,
+    user_id: int,
+    submission: QuizSubmitRequest,
+    db: Session
+) -> QuizAttemptResultOut:
     quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
     if not quiz:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found.")
@@ -164,7 +167,7 @@ def evaluate_quiz_submission(quiz_id: int, user_id: int, submission: QuizSubmitR
 
     # Competency Delta Calculation
     comp_obj = db.query(Competency).filter(Competency.id == quiz.competency_id).first() if quiz.competency_id else None
-    before_score = 42.0 # default baseline before learning if not yet assessed
+    before_score = 42.0
     after_score = 42.0
     delta = 0.0
 
@@ -176,8 +179,6 @@ def evaluate_quiz_submission(quiz_id: int, user_id: int, submission: QuizSubmitR
 
         if user_comp:
             before_score = user_comp.current_level
-            # Weighted formula for demonstrable learning gain:
-            # New score incorporates quiz accuracy weighted against gap
             gain = round((score_pct * 0.3) + 2.0, 1)
             after_score = min(100.0, round(before_score + gain, 1))
             delta = round(after_score - before_score, 1)
@@ -219,15 +220,19 @@ def evaluate_quiz_submission(quiz_id: int, user_id: int, submission: QuizSubmitR
         for q in question_results if not q.is_correct
     ]
 
-    feedback = (
-        f"Grok AI Performance Analysis: You scored {score_pct}% ({total_correct}/{len(questions)} correct). "
-        f"Your competency in '{comp_obj.name if comp_obj else quiz.topic}' improved by +{delta}% "
-        f"(from {before_score}% to {after_score}%). "
+    # Grok AI Qualitative & Pedagogical Feedback
+    feedback = await generate_grok_quiz_feedback(
+        quiz_title=quiz.title,
+        topic=quiz.topic,
+        score_pct=score_pct,
+        total_correct=total_correct,
+        total_questions=len(questions),
+        competency_name=comp_obj.name if comp_obj else quiz.topic,
+        before_score=before_score,
+        after_score=after_score,
+        delta=delta,
+        mistakes=mistakes
     )
-    if mistakes:
-        feedback += f"You missed {len(mistakes)} question(s). Review the detailed pedagogical explanations below to reinforce official methodology before the next milestone."
-    else:
-        feedback += "Outstanding result with 100% precision! Your statistical understanding aligns completely with Ministry benchmarks. Continue along your learning path."
 
     attempt = QuizAttempt(
         quiz_id=quiz.id,

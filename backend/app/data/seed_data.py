@@ -404,6 +404,8 @@ BASELINE_QUESTIONS = [
             {"key": "C", "text": "NVA = Total Inputs - Fuel Consumption"},
             {"key": "D", "text": "NVA = Gross Fixed Capital / Working Capital"}
         ],
+        "correct_option": "A",
+        "explanation": "In Annual Survey of Industries (ASI) accounting framework, Net Value Added (NVA) is calculated as Gross Output minus Total Inputs minus Depreciation."
     },
     {
         "id": 9,

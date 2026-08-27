@@ -28,13 +28,26 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Configure CORS
+# Configure CORS using environment-configured origins
+raw_origins = getattr(settings, "ALLOWED_ORIGINS", "")
+if isinstance(raw_origins, list):
+    allowed_origins = raw_origins
+elif isinstance(raw_origins, str) and raw_origins.strip():
+    allowed_origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
+else:
+    allowed_origins = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:3000"
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"],
 )
 
 def seed_initial_data():
@@ -103,10 +116,8 @@ app.include_router(documents.router, prefix=settings.API_V1_STR)
 app.include_router(quizzes.router, prefix=settings.API_V1_STR)
 app.include_router(progress.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
-app.include_router(
-    final_interview.router,
-    prefix=settings.API_V1_STR
-)
+app.include_router(final_interview.router, prefix=settings.API_V1_STR)
+
 @app.get("/")
 def root():
     return {

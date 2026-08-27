@@ -65,7 +65,7 @@ def evaluate_baseline_submission(user_id: int, submission: BaselineAssessmentSub
         qid = q["id"]
         domain = q["domain"]
         comp_code = q["competency_code"]
-        correct_ans = q["correct_option"]
+        correct_ans = q.get("correct_option", "A")
 
         domain_totals[domain] = domain_totals.get(domain, 0) + 1
         user_ans = answers_map.get(qid, "")

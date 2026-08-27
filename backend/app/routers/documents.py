@@ -9,42 +9,87 @@ from ..services.document_service import process_uploaded_document
 
 router = APIRouter(prefix="/documents", tags=["AI Learning Studio Documents"])
 
+ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "pptx", "ppt", "txt"}
+MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024  # 25 MB
+
 @router.post("/upload", response_model=DocumentUploadResponse, status_code=status.HTTP_201_CREATED)
 async def upload_document(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Max file size 25MB
-    content = await file.read()
-    if len(content) > 25 * 1024 * 1024:
+    # 1. Validate filename
+    if not file.filename or not file.filename.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="File size exceeds 25MB limit."
+            detail="Filename is missing or invalid."
         )
 
-    extracted_text = process_uploaded_document(file.filename, content)
-    if not extracted_text.strip():
+    clean_filename = file.filename.strip()
+    if "." not in clean_filename:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Could not extract readable text from this document. Please ensure it is not an empty or password-protected file."
+            detail="File has no extension. Allowed formats: PDF, DOCX, DOC, PPTX, PPT, TXT."
         )
 
-    file_ext = file.filename.split(".")[-1].lower() if "." in file.filename else "txt"
+    file_ext = clean_filename.split(".")[-1].lower()
+    if file_ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported file format '.{file_ext}'. Allowed formats: PDF, DOCX, DOC, PPTX, PPT, TXT."
+        )
+
+    # 2. Read and validate file size
+    try:
+        content = await file.read()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to read uploaded file: {str(e)}"
+        )
+
+    if len(content) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded file is empty (0 bytes)."
+        )
+
+    if len(content) > MAX_FILE_SIZE_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File size exceeds the 25MB maximum limit."
+        )
+
+    # 3. Extract text safely
+    try:
+        extracted_text = process_uploaded_document(clean_filename, content)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Could not extract readable text from document. Ensure the file is not corrupted or password protected."
+        )
+
+    if not extracted_text or not extracted_text.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Could not extract readable text from this document. Please ensure it contains readable text and is not an empty or scanned image-only file."
+        )
 
     doc = Document(
         user_id=current_user.id,
-        filename=file.filename,
+        filename=clean_filename,
         file_type=file_ext,
         file_size_bytes=len(content),
-        extracted_text=extracted_text,
-        character_count=len(extracted_text)
+        extracted_text=extracted_text.strip(),
+        character_count=len(extracted_text.strip())
     )
     db.add(doc)
     db.commit()
     db.refresh(doc)
 
-    preview = extracted_text[:300] + ("..." if len(extracted_text) > 300 else "")
+    preview = extracted_text.strip()[:300] + ("..." if len(extracted_text.strip()) > 300 else "")
 
     return DocumentUploadResponse(
         id=doc.id,

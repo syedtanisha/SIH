@@ -16,12 +16,12 @@ from ..services.quiz_generator_service import create_ai_quiz, evaluate_quiz_subm
 router = APIRouter(prefix="/quizzes", tags=["AI Quizzes"])
 
 @router.post("/generate", response_model=QuizOut, status_code=status.HTTP_201_CREATED)
-def generate_quiz(
+async def generate_quiz(
     request: QuizGenerateRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return create_ai_quiz(request, current_user.id, db)
+    return await create_ai_quiz(request, current_user.id, db)
 
 @router.get("", response_model=List[QuizOut])
 def list_my_quizzes(
@@ -67,6 +67,13 @@ def get_quiz(
     if not q:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found.")
     
+    # Enforce quiz ownership authorization
+    if q.user_id != current_user.id and getattr(current_user, "role", "user") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. You do not own this quiz."
+        )
+    
     questions_out = [
         QuizQuestionOut(
             id=quest.id,
@@ -91,10 +98,21 @@ def get_quiz(
     )
 
 @router.post("/{quiz_id}/submit", response_model=QuizAttemptResultOut)
-def submit_quiz(
+async def submit_quiz(
     quiz_id: int,
     submission: QuizSubmitRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return evaluate_quiz_submission(quiz_id, current_user.id, submission, db)
+    q = db.query(Quiz).filter(Quiz.id == quiz_id).first()
+    if not q:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found.")
+    
+    # Enforce quiz ownership authorization
+    if q.user_id != current_user.id and getattr(current_user, "role", "user") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. You cannot submit answers to another officer's quiz."
+        )
+
+    return await evaluate_quiz_submission(quiz_id, current_user.id, submission, db)

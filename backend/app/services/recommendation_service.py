@@ -32,6 +32,19 @@ def get_personalized_recommendations(user_id: int, db: Session) -> Recommendatio
         focus_gap_code = "STAT_SURVEY"
         gap_val = 0.0
 
+    # Handle zero active resources cleanly
+    if not all_resources:
+        return RecommendationResponse(
+            primary_focus_gap=focus_gap_name,
+            gap_percentage=gap_val,
+            total_recommendations=0,
+            recommendations=[],
+            ai_curation_note=(
+                f"No active learning resources are currently published in the catalog for {focus_gap_name}. "
+                f"Please check back soon as new MoSPI, NSSTA, and iGOT modules are synchronized."
+            )
+        )
+
     recommendations: List[RecommendationItem] = []
 
     for res in all_resources:
@@ -119,7 +132,7 @@ def get_personalized_learning_path(user_id: int, db: Session) -> LearningPathRes
             else:
                 matched_reports.append(r)
 
-    primary_course = matched_courses[0] if matched_courses else (all_resources[0] if all_resources else None)
+    primary_course = matched_courses[0] if matched_courses else (all_resources[0] if len(all_resources) > 0 else None)
     primary_lab = matched_labs[0] if matched_labs else (all_resources[1] if len(all_resources) > 1 else None)
     primary_pub = matched_reports[0] if matched_reports else (all_resources[2] if len(all_resources) > 2 else None)
 

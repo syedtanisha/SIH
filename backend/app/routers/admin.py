@@ -2,13 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from ..db.database import get_db
 from ..models.models import User, Competency, UserCompetency, QuizAttempt, LearningResource
-from ..core.security import get_current_user
+from ..core.security import get_current_admin_user
 
 router = APIRouter(prefix="/admin", tags=["Admin & System Analytics"])
 
 @router.get("/stats")
 def get_admin_system_stats(
-    current_user: User = Depends(get_current_user),
+    current_admin: User = Depends(get_current_admin_user),
     db: Session = Depends(get_db)
 ):
     total_users = db.query(User).count()

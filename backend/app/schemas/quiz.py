@@ -20,10 +20,10 @@ class MCQGeneratedQuestion(BaseModel):
 class QuizGenerateRequest(BaseModel):
     document_id: Optional[int] = None
     resource_id: Optional[int] = None
-    custom_text: Optional[str] = None
-    topic: str
+    custom_text: Optional[str] = Field(None, max_length=50000)
+    topic: str = Field(..., min_length=2, max_length=255)
     num_questions: int = Field(default=5, ge=1, le=20)
-    difficulty: str = "Intermediate"
+    difficulty: str = Field(default="Intermediate", pattern="^(Foundational|Beginner|Intermediate|Advanced|Expert)$")
     competency_id: Optional[int] = None
 
 class QuizQuestionOut(BaseModel):
@@ -57,10 +57,10 @@ class QuizOut(BaseModel):
 
 class QuizAnswerSubmit(BaseModel):
     question_id: int
-    selected_option: str # 'A', 'B', 'C', 'D'
+    selected_option: str = Field(..., max_length=10) # 'A', 'B', 'C', 'D'
 
 class QuizSubmitRequest(BaseModel):
-    answers: List[QuizAnswerSubmit]
+    answers: List[QuizAnswerSubmit] = Field(..., min_length=1)
 
 class QuestionResultDetail(BaseModel):
     question_id: int

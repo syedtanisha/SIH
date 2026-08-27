@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None
     AI_PROVIDER: str = "auto"
+    LLM_MAX_RETRIES: int = 2
+    LLM_TIMEOUT_SECONDS: float = 30.0
+
+    ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000"
 
     IGOT_API_BASE_URL: str = "https://api.igotkarmayogi.gov.in/v1"
     IGOT_CLIENT_ID: Optional[str] = None

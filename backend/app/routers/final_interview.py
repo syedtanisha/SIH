@@ -10,15 +10,15 @@ from ..models.models import User
 from ..core.security import get_current_user
 from ..schemas.final_interview import (
     FinalInterviewReadiness,
+    FinalInterviewAnswerSubmit,
+    FinalInterviewAnswerEvaluation
 )
 from ..services.ai_service import evaluate_final_interview_answer
-
 
 router = APIRouter(
     prefix="/final-interview",
     tags=["Final AI Interview"]
 )
-
 
 @router.get(
     "/readiness",
@@ -33,7 +33,6 @@ def get_readiness(
         db
     )
 
-
 @router.post("/questions")
 async def generate_questions(
     current_user: User = Depends(get_current_user),
@@ -43,17 +42,17 @@ async def generate_questions(
         current_user.id,
         db
     )
-@router.post("/evaluate-answer")
+
+@router.post("/evaluate-answer", response_model=FinalInterviewAnswerEvaluation)
 async def evaluate_answer(
-    data: dict,
+    data: FinalInterviewAnswerSubmit,
     current_user: User = Depends(get_current_user)
 ):
     result = await evaluate_final_interview_answer(
-        question=data.get("question", ""),
-        answer=data.get("answer", ""),
-        competency=data.get("competency", ""),
-        domain=data.get("domain", ""),
-        difficulty=data.get("difficulty", "Intermediate")
+        question=data.question,
+        answer=data.answer,
+        competency=data.competency,
+        domain=data.domain,
+        difficulty=data.difficulty
     )
-
     return result

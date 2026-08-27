@@ -96,7 +96,6 @@ def resolve_role_benchmarks(department: str = "", designation: str = "") -> Dict
     calibrated_weights = {}
 
     for comp_code, base_val in div_profile["benchmarks"].items():
-        # Adjust benchmark by designation seniority (constrained between 60% and 98%)
         calibrated_benchmarks[comp_code] = min(98.0, max(60.0, round(base_val + delta, 1)))
 
     for comp_code, base_w in div_profile["weights"].items():
@@ -200,7 +199,6 @@ def analyze_competency_gaps(user_id: int, db: Session) -> CompetencyGapAnalysisO
     domain_gap_counts: Dict[str, float] = {}
 
     for item in profile.competencies:
-        # Use role-calibrated weight for deterministic prioritization
         role_weight = role_meta["weights"].get(item.code, 1.0)
         priority_score = round(item.gap * role_weight, 2)
 
@@ -226,25 +224,34 @@ def analyze_competency_gaps(user_id: int, db: Session) -> CompetencyGapAnalysisO
             )
         )
 
-        domain_gap_counts[item.domain] = domain_gap_counts.get(item.domain, 0.0) + item.gap
+        if item.gap > 0:
+            domain_gap_counts[item.domain] = domain_gap_counts.get(item.domain, 0.0) + item.gap
 
     # Sort gaps deterministically by priority score descending
     gap_items.sort(key=lambda x: x.priority_score, reverse=True)
 
     critical_count = sum(1 for g in gap_items if g.priority == "High")
-    primary_domain = max(domain_gap_counts.items(), key=lambda x: x[1])[0] if domain_gap_counts else "Survey Operations"
+
+    # Safe handling of domain gap counts when 0 gaps exist or collection is empty
+    if domain_gap_counts:
+        primary_domain = max(domain_gap_counts.items(), key=lambda x: x[1])[0]
+    elif profile.competencies:
+        primary_domain = profile.competencies[0].domain
+    else:
+        primary_domain = "Survey Operations"
 
     # AI diagnosis summary with division and designation context
+    active_gaps = [g.dict() for g in gap_items if g.gap > 0]
     ai_summary = generate_gap_diagnosis(
         officer_name=user.full_name if user else "Officer",
         designation=user.designation if user else "Statistical Officer",
-        gaps=[g.dict() for g in gap_items if g.gap > 0],
+        gaps=active_gaps,
         overall_readiness=profile.overall_readiness_score,
         division=user.department if user else "MoSPI"
     )
 
     return CompetencyGapAnalysisOut(
-        total_gaps_identified=profile.active_gaps_count,
+        total_gaps_identified=len(active_gaps),
         critical_gaps_count=critical_count,
         primary_focus_domain=primary_domain,
         user_division=user.department if user else "MoSPI",
