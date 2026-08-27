@@ -82,11 +82,9 @@ export const progressApi = {
 
 export const finalInterviewApi = {
   getReadiness: () => api.get('/final-interview/readiness'),
-
   generateQuestions: () => api.post('/final-interview/questions'),
-
-  evaluateAnswer: (data) =>
-    api.post('/final-interview/evaluate-answer', data),
+  evaluateAnswer: (data) => api.post('/final-interview/evaluate-answer', data),
+  generateReport: (data) => api.post('/final-interview/generate-report', data),
 };
 
 export const adminApi = {

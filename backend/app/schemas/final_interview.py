@@ -29,3 +29,33 @@ class FinalInterviewAnswerEvaluation(BaseModel):
     strengths: List[str]
     weaknesses: List[str]
     next_difficulty: str
+
+class InterviewQuestionRecord(BaseModel):
+    question: str
+    answer: str
+    competency: Optional[str] = None
+    domain: Optional[str] = None
+    score: Optional[int] = 7
+    evaluation: Optional[str] = None
+    strengths: Optional[List[str]] = []
+    weaknesses: Optional[List[str]] = []
+
+class FinalInterviewReportRequest(BaseModel):
+    results: List[InterviewQuestionRecord]
+
+class DomainScoreBreakdown(BaseModel):
+    domain: str
+    score: float
+    status: str
+
+class FinalInterviewReportResponse(BaseModel):
+    overall_score: float
+    overall_score_out_of_10: float
+    cadre_grade: str
+    total_questions: int
+    readiness_percentage: float
+    ai_executive_synthesis: str
+    master_strengths: List[str]
+    master_areas_to_improve: List[str]
+    domain_breakdown: List[DomainScoreBreakdown]
+    recommended_actions: List[str]
