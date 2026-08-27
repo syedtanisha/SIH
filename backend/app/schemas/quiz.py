@@ -21,7 +21,7 @@ class QuizGenerateRequest(BaseModel):
     document_id: Optional[int] = None
     resource_id: Optional[int] = None
     custom_text: Optional[str] = Field(None, max_length=50000)
-    topic: str = Field(..., min_length=2, max_length=255)
+    topic: str = Field(..., min_length=2, max_length=500)
     num_questions: int = Field(default=5, ge=1, le=20)
     difficulty: str = Field(default="Intermediate", pattern="^(Foundational|Beginner|Intermediate|Advanced|Expert)$")
     competency_id: Optional[int] = None

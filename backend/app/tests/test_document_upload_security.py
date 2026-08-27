@@ -22,21 +22,31 @@ def get_auth_token():
     })
     return login_res.json()["access_token"]
 
-def test_upload_disallowed_file_extension():
+def test_upload_disallowed_file_extensions():
     token = get_auth_token()
     headers = {"Authorization": f"Bearer {token}"}
     
-    # Try uploading .exe
-    files = {"file": ("malicious_script.exe", io.BytesIO(b"MZ\x90\x00BinaryExeContent"), "application/octet-stream")}
+    disallowed = [
+        ("malicious_script.exe", b"MZ\x90\x00BinaryExeContent"),
+        ("archive.zip", b"PK\x03\x04ZipContent"),
+        ("script.bat", b"@echo off\necho hello"),
+        ("deploy.sh", b"#!/bin/bash\necho hello"),
+        ("script.py", b"print('hello')"),
+    ]
+    for filename, content in disallowed:
+        files = {"file": (filename, io.BytesIO(content), "application/octet-stream")}
+        res = client.post("/api/v1/documents/upload", files=files, headers=headers)
+        assert res.status_code == 400
+        assert "Unsupported file format" in res.json()["detail"]
+
+def test_upload_file_without_extension():
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    files = {"file": ("unnamed_file", io.BytesIO(b"Some plain text content"), "text/plain")}
     res = client.post("/api/v1/documents/upload", files=files, headers=headers)
     assert res.status_code == 400
-    assert "Unsupported file format '.exe'" in res.json()["detail"]
-
-    # Try uploading .py
-    files_py = {"file": ("script.py", io.BytesIO(b"print('hello')"), "text/plain")}
-    res_py = client.post("/api/v1/documents/upload", files=files_py, headers=headers)
-    assert res_py.status_code == 400
-    assert "Unsupported file format '.py'" in res_py.json()["detail"]
+    assert "File has no extension" in res.json()["detail"]
 
 def test_upload_empty_file():
     token = get_auth_token()
@@ -46,6 +56,17 @@ def test_upload_empty_file():
     res = client.post("/api/v1/documents/upload", files=files, headers=headers)
     assert res.status_code == 400
     assert "empty" in res.json()["detail"].lower()
+
+def test_upload_oversized_file():
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    # 26 MB (exceeds 25 MB limit)
+    oversized_content = b"0" * (26 * 1024 * 1024)
+    files = {"file": ("oversized_notes.txt", io.BytesIO(oversized_content), "text/plain")}
+    res = client.post("/api/v1/documents/upload", files=files, headers=headers)
+    assert res.status_code == 400
+    assert "25MB" in res.json()["detail"]
 
 def test_upload_valid_text_document():
     token = get_auth_token()
