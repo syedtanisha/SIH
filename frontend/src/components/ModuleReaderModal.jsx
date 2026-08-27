@@ -6,13 +6,12 @@ import {
   ExternalLink, 
   Sparkles, 
   Clock, 
-  CheckCircle2, 
   Layers, 
-  Award, 
-  FileText, 
   Calculator, 
   ShieldCheck, 
-  Building2 
+  Building2,
+  Info,
+  ChevronRight
 } from 'lucide-react';
 
 export const ModuleReaderModal = ({ resource, isOpen, onClose }) => {
@@ -29,87 +28,197 @@ export const ModuleReaderModal = ({ resource, isOpen, onClose }) => {
     resource_type,
     difficulty,
     estimated_duration_mins,
-    competency_code
   } = resource;
+
+  const targetUrl = official_url && official_url.startsWith('http') 
+    ? official_url 
+    : 'https://www.mospi.gov.in/';
+
+  const handleOpenPortal = (e) => {
+    e.preventDefault();
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  };
 
   const handleLaunchQuiz = () => {
     onClose();
     navigate(`/studio?topic=${encodeURIComponent(title)}`);
   };
 
-  // Generate enriched pedagogical content based on topic & competency
+  // Structured pedagogical data tailored to the topic
   const getDetailedContent = () => {
     const titleLower = (title || '').toLowerCase();
     
     if (titleLower.includes('python') || titleLower.includes('comput')) {
       return {
-        subtitle: 'NSSTA Digital Laboratory • Practical Python for Official Microdata',
+        subtitle: 'NSSTA Digital Data Laboratory • Practical Microdata Analytics',
         modules: [
-          { title: '1. Microdata Ingestion & Anonymization', desc: 'Loading multi-gigabyte survey schedules (.txt/.csv) using pandas chunking, schema validation, and masking direct identifiers.' },
-          { title: '2. Applying Sampling Multipliers & Weights', desc: 'Implementing multiplier expansion formulas to compute estimated population totals: Total = Sum(Variable * Multiplier).' },
-          { title: '3. Data Validation & Audit Scripts', desc: 'Automating consistency checks across household rosters, economic activity codes, and income brackets.' },
-          { title: '4. Automated Dissemination Pipelines', desc: 'Generating reproducible statistical bulletins and tables using NumPy, SciPy, and Matplotlib.' }
+          { title: '1. Microdata Ingestion & Chunking', desc: 'Loading multi-gigabyte survey schedules using pandas chunking, data typing, and memory optimization.' },
+          { title: '2. Multiplier Expansion & Estimation', desc: 'Applying sampling weights to unit records to estimate population counts, totals, and ratios.' },
+          { title: '3. Automated Quality Validation', desc: 'Writing automated assertion scripts to detect outliers and roster code inconsistencies.' },
+          { title: '4. Dissemination & Reporting', desc: 'Generating automated summary bulletins and visualizations with NumPy and Matplotlib.' }
         ],
         formulas: [
-          'Weighted Total: \\hat{Y} = \\sum_{i=1}^{n} w_i \\cdot y_i',
-          'Weighted Mean: \\bar{y}_w = \\frac{\\sum_{i=1}^{n} w_i \\cdot y_i}{\\sum_{i=1}^{n} w_i}',
-          'Multiplier Expansion: w_i = \\text{Design Weight} \\times \\text{Non-response Adjustment}'
+          {
+            name: 'Weighted Population Total Estimator',
+            display: 'Ŷ = Σ (w_i × y_i)',
+            variables: [
+              { sym: 'Ŷ', desc: 'Estimated population aggregate total' },
+              { sym: 'w_i', desc: 'Sampling multiplier / design weight for sample unit i' },
+              { sym: 'y_i', desc: 'Observed value of the variable (e.g. household consumption, income)' }
+            ],
+            note: 'Applied to every unit record in NSS and PLFS microdata to expand sample observations to national population totals.'
+          },
+          {
+            name: 'Weighted Mean Estimator',
+            display: 'ȳ_w = [ Σ (w_i × y_i) ] / [ Σ w_i ]',
+            variables: [
+              { sym: 'ȳ_w', desc: 'Weighted average per unit record' },
+              { sym: 'Σ w_i', desc: 'Sum of multipliers (estimated total population size)' }
+            ],
+            note: 'Ensures sample means are unbiased even under non-proportional multi-stage sample allocation.'
+          },
+          {
+            name: 'Composite Multiplier Calculation',
+            display: 'w_i = (1 / P_i) × (1 / R_h)',
+            variables: [
+              { sym: 'P_i', desc: 'Probability of selecting unit i across all sampling stages' },
+              { sym: 'R_h', desc: 'Response rate in stratum h (non-response adjustment factor)' }
+            ],
+            note: 'Adjusts design weights for non-contact and non-response to prevent sample attrition bias.'
+          }
         ],
-        guidelines: 'Always verify unit multiplier sums against the Projected Population figures published by the Technical Group on Population Projections.'
+        guidelines: 'Verify that multiplier totals align with population projections from the MoSPI Technical Group before bulletin release.'
       };
     }
     
-    if (titleLower.includes('national accounts') || titleLower.includes('sna') || titleLower.includes('gdp')) {
+    if (titleLower.includes('national accounts') || titleLower.includes('sna') || titleLower.includes('gdp') || titleLower.includes('nad')) {
       return {
         subtitle: 'National Accounts Division (NAD) • Macroeconomic Compilation Standards',
         modules: [
-          { title: '1. SNA 2008 Conceptual Framework', desc: 'Production boundaries, institutional sectors (General Government, Financial/Non-Financial Corporations, NPISH, Households).' },
-          { title: '2. GVA Estimation by Economic Activity', desc: 'Compiling Gross Output and Intermediate Consumption across agriculture, manufacturing, and services.' },
-          { title: '3. Supply and Use Tables (SUT)', desc: 'Balancing commodity supply (domestic production + imports) with domestic absorption and exports.' },
-          { title: '4. Sequence of Accounts & Capital Formation', desc: 'Estimating Gross Fixed Capital Formation (GFCF), Change in Stocks, and Net Foreign Factor Income.' }
+          { title: '1. SNA 2008 Conceptual Framework', desc: 'Production boundaries, institutional sectors (General Govt, Corporations, NPISH, Households).' },
+          { title: '2. Gross Value Added (GVA) by Economic Activity', desc: 'Compiling Gross Output and Intermediate Consumption across agriculture, industry, and services.' },
+          { title: '3. Supply and Use Tables (SUT)', desc: 'Balancing domestic production, imports, intermediate absorption, final consumption, and exports.' },
+          { title: '4. Capital Formation & Sequence of Accounts', desc: 'Compiling Gross Fixed Capital Formation (GFCF), change in inventories, and consumption of fixed capital.' }
         ],
         formulas: [
-          'GVA at Basic Prices = Gross Output (at basic prices) - Intermediate Consumption',
-          'GDP at Market Prices = GVA at Basic Prices + Product Taxes - Product Subsidies',
-          'GFCF = Gross Additions to Fixed Assets - Disposals of Fixed Assets + Improvements'
+          {
+            name: 'Gross Value Added (GVA) at Basic Prices',
+            display: 'GVA (Basic Prices) = Gross Output (Basic Prices) - Intermediate Consumption',
+            variables: [
+              { sym: 'Gross Output', desc: 'Total market and non-market production value generated during the accounting year' },
+              { sym: 'Intermediate Consumption', desc: 'Cost of goods and raw materials used up or transformed in production' }
+            ],
+            note: 'Primary measure of sectoral economic contribution under India’s National Accounts 2011-12 base series.'
+          },
+          {
+            name: 'Gross Domestic Product (GDP) at Market Prices',
+            display: 'GDP (Market Prices) = GVA (Basic Prices) + Product Taxes - Product Subsidies',
+            variables: [
+              { sym: 'Product Taxes', desc: 'GST, custom duties, excise duties, and stamp duties' },
+              { sym: 'Product Subsidies', desc: 'Food subsidies, fertilizer subsidies, and petroleum subsidies' }
+            ],
+            note: 'The official headline economic growth indicator published in quarterly and annual GDP estimates.'
+          },
+          {
+            name: 'Gross Fixed Capital Formation (GFCF)',
+            display: 'GFCF = Net Acquisition of Fixed Assets + Cost of Ownership Transfer',
+            variables: [
+              { sym: 'Fixed Assets', desc: 'Dwellings, other buildings, machinery & equipment, intellectual property' },
+              { sym: 'Ownership Transfer', desc: 'Legal and delivery fees associated with asset creation' }
+            ],
+            note: 'Represents the investment rate in the economy as a percentage of GDP.'
+          }
         ],
-        guidelines: 'Incorporate MCA-21 electronic filings for organized private corporate sector and PLFS labor coefficients for unincorporated enterprises.'
+        guidelines: 'Incorporate MCA-21 filings for the private corporate sector and PLFS labor input estimates for informal enterprises.'
       };
     }
 
-    if (titleLower.includes('cpi') || titleLower.includes('iip') || titleLower.includes('price')) {
+    if (titleLower.includes('cpi') || titleLower.includes('iip') || titleLower.includes('price') || titleLower.includes('esd')) {
       return {
         subtitle: 'Economic Statistics Division (ESD) • Index Numbers Compilation Manual',
         modules: [
-          { title: '1. Price Quotation & Frame Maintenance', desc: 'Collection protocols across rural and urban price markets with regular sample basket monitoring.' },
-          { title: '2. Laspeyres Base-Weighted Aggregation', desc: 'Computing item relatives and sub-group indices using fixed base year expenditure shares.' },
-          { title: '3. Factory Production Tracking for IIP', desc: 'Monthly data canvassing from registered factories across 23 NIC 2-digit industry groups.' },
-          { title: '4. Chain Indexing & Splicing', desc: 'Methodology for linking historical price series when new base year weighting is introduced.' }
+          { title: '1. Price Quotation & Basket Maintenance', desc: 'Standard operating procedures for monthly canvassing across 1,181 village and 1,114 urban markets.' },
+          { title: '2. Laspeyres Base-Weighted Aggregation', desc: 'Computing item price relatives and subgroup indices using fixed base year expenditure shares.' },
+          { title: '3. Factory Production Tracking for IIP', desc: 'Canvassing production volume across 407 item groups from registered manufacturing units.' },
+          { title: '4. Chain Indexing & Base Revisions', desc: 'Updating weighting baskets and splicing historical series during periodic base year updates.' }
         ],
         formulas: [
-          'Laspeyres Price Index: I_{0t} = \\frac{\\sum (P_t \\cdot Q_0)}{\\sum (P_0 \\cdot Q_0)} \\times 100',
-          'Geometric Mean Item Relative: R_i = \\left(\\prod_{j=1}^{k} \\frac{P_{tj}}{P_{0j}}\\right)^{1/k}',
-          'Sub-Group Index: I_{sub} = \\sum w_i \\cdot R_i'
+          {
+            name: 'Laspeyres Price Index Formula',
+            display: 'I_{0t} = [ Σ (P_t × Q_0) / Σ (P_0 × Q_0) ] × 100',
+            variables: [
+              { sym: 'P_t', desc: 'Price of the item in the current comparison month t' },
+              { sym: 'P_0', desc: 'Price of the item in the base year (2012 = 100)' },
+              { sym: 'Q_0', desc: 'Base year consumption basket quantity' }
+            ],
+            note: 'Headline Consumer Price Index (CPI-Combined) is compiled monthly using this base-weighted formula.'
+          },
+          {
+            name: 'Geometric Mean Item Price Relative',
+            display: 'R_i = ( (P_{t,1}/P_{0,1}) × (P_{t,2}/P_{0,2}) × ... × (P_{t,k}/P_{0,k}) ) ^ (1/k)',
+            variables: [
+              { sym: 'R_i', desc: 'Elementary price relative for item i across k sample quotation markets' },
+              { sym: 'k', desc: 'Number of validated price quotes received in the reference month' }
+            ],
+            note: 'Geometric averaging prevents upward bias caused by extreme localized price fluctuations.'
+          },
+          {
+            name: 'Index of Industrial Production (IIP)',
+            display: 'IIP_t = [ Σ ( (q_{it} / q_{i0}) × W_i ) / Σ W_i ] × 100',
+            variables: [
+              { sym: 'q_{it}', desc: 'Physical production volume of item i in current month t' },
+              { sym: 'q_{i0}', desc: 'Average monthly production volume of item i in base year' },
+              { sym: 'W_i', desc: 'GVA weight of item i derived from Annual Survey of Industries (ASI)' }
+            ],
+            note: 'Monitors short-term industrial momentum across Mining (14.37%), Manufacturing (77.63%), and Electricity (7.99%).'
+          }
         ],
-        guidelines: 'Ensure price quotes are scrutinized for seasonal spikes, missing quotations are imputed via cell-mean, and outliers are flagged before monthly release.'
+        guidelines: 'Ensure price quotes are scrutinized for missing quotes and seasonal out-of-stock items are imputed via cell-mean.'
       };
     }
 
     // Default Survey & Quality Module
     return {
-      subtitle: 'NSSTA & MoSPI Official Curriculum • Official Statistical Methodology',
+      subtitle: 'NSSTA & MoSPI Official Curriculum • Official Survey Design',
       modules: [
-        { title: '1. Sampling Frame & Multi-Stage Design', desc: 'Selection of Census Villages/UFS blocks as FSUs and households as USUs with circular systematic sampling.' },
-        { title: '2. Questionnaire Design & Field Canvassing', desc: 'Structured schedules, reference periods (UPSS, CWS), and non-sampling error control protocols.' },
-        { title: '3. National Quality Assurance (UN NQAF)', desc: 'Verification of impartiality, transparency, sound methodology, and confidentiality safeguards.' },
-        { title: '4. Dissemination & eSankhyiki FAIR Metadata', desc: 'Open data publishing, Data Documentation Initiative (DDI) standards, and API catalog maintenance.' }
+        { title: '1. Multi-Stage Stratified Sampling Frame', desc: 'Selection of Census Villages/UFS blocks as FSUs and households as USUs with circular systematic sampling.' },
+        { title: '2. Questionnaire Design & Reference Periods', desc: 'Canvassing structured schedules under Usual Principal and Subsidiary Status (UPSS) and Current Weekly Status (CWS).' },
+        { title: '3. National Quality Assurance (UN NQAF)', desc: 'Validating impartiality, methodology, transparent metadata, and respondent confidentiality safeguards.' },
+        { title: '4. Dissemination & eSankhyiki Standards', desc: 'Publishing open microdata with Data Documentation Initiative (DDI) standards and statistical disclosure control.' }
       ],
       formulas: [
-        'Stratified Sample Variance: V(\\bar{y}_{st}) = \\sum W_h^2 \\frac{S_h^2}{n_h} (1 - f_h)',
-        'Design Effect: \\text{Deff} = 1 + (\\bar{m} - 1) \\cdot \\rho',
-        'Response Rate: R = \\frac{\\text{Completed Interviews}}{\\text{Eligible Sample Units}} \\times 100'
+        {
+          name: 'Stratified Sample Variance Formula',
+          display: 'Var(ȳ_st) = Σ [ W_h² × (S_h² / n_h) × (1 - f_h) ]',
+          variables: [
+            { sym: 'W_h', desc: 'Stratum population weight (N_h / N)' },
+            { sym: 'S_h²', desc: 'Variance of the variable in stratum h' },
+            { sym: 'n_h', desc: 'Number of sample units allocated to stratum h' },
+            { sym: 'f_h', desc: 'Sampling fraction (n_h / N_h), where (1 - f_h) is the Finite Population Correction (FPC)' }
+          ],
+          note: 'Used in PLFS and NSS rounds to compute standard errors and relative standard error (RSE) for published domain estimates.'
+        },
+        {
+          name: 'Design Effect (Deff)',
+          display: 'Deff = 1 + (m̄ - 1) × ρ',
+          variables: [
+            { sym: 'Deff', desc: 'Ratio of complex design variance to simple random sampling variance' },
+            { sym: 'm̄', desc: 'Average cluster size (households per primary sampling unit)' },
+            { sym: 'ρ', desc: 'Intra-cluster correlation coefficient' }
+          ],
+          note: 'Quantifies efficiency loss due to clustering; guide for determining optimal cluster sizes in nationwide surveys.'
+        },
+        {
+          name: 'Survey Response Rate',
+          display: 'Response Rate (%) = [ Number of Completed Schedules / Total Allocated Sample Units ] × 100',
+          variables: [
+            { sym: 'Numerator', desc: 'Successfully canvassed and audited household schedules' },
+            { sym: 'Denominator', desc: 'Total sample units originally selected in the frame' }
+          ],
+          note: 'Key quality indicator monitored under UN NQAF standards. MoSPI household surveys maintain response rates above 95%.'
+        }
       ],
-      guidelines: 'Follow United Nations Fundamental Principles of Official Statistics to ensure scientific rigor and policy independence.'
+      guidelines: 'Adhere to United Nations Fundamental Principles of Official Statistics to ensure scientific rigor and policy independence.'
     };
   };
 
@@ -123,7 +232,7 @@ export const ModuleReaderModal = ({ resource, isOpen, onClose }) => {
         <div className="bg-gradient-to-r from-mospi-900 via-mospi-800 to-slate-900 text-white p-6 relative">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition"
+            className="absolute top-4 right-4 p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
             title="Close module"
           >
             <X className="w-5 h-5" />
@@ -155,9 +264,9 @@ export const ModuleReaderModal = ({ resource, isOpen, onClose }) => {
         <div className="flex border-b border-slate-200 bg-slate-50 px-6 pt-3 gap-3 text-xs font-semibold">
           <button
             onClick={() => setActiveTab('curriculum')}
-            className={`pb-2.5 border-b-2 transition flex items-center gap-1.5 ${
+            className={`pb-2.5 border-b-2 transition flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'curriculum'
-                ? 'border-mospi-900 text-mospi-900'
+                ? 'border-mospi-900 text-mospi-900 font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -167,9 +276,9 @@ export const ModuleReaderModal = ({ resource, isOpen, onClose }) => {
 
           <button
             onClick={() => setActiveTab('methodology')}
-            className={`pb-2.5 border-b-2 transition flex items-center gap-1.5 ${
+            className={`pb-2.5 border-b-2 transition flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'methodology'
-                ? 'border-mospi-900 text-mospi-900'
+                ? 'border-mospi-900 text-mospi-900 font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -179,9 +288,9 @@ export const ModuleReaderModal = ({ resource, isOpen, onClose }) => {
 
           <button
             onClick={() => setActiveTab('practice')}
-            className={`pb-2.5 border-b-2 transition flex items-center gap-1.5 ${
+            className={`pb-2.5 border-b-2 transition flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'practice'
-                ? 'border-mospi-900 text-mospi-900'
+                ? 'border-mospi-900 text-mospi-900 font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -226,21 +335,53 @@ export const ModuleReaderModal = ({ resource, isOpen, onClose }) => {
           {/* TAB 2: METHODOLOGY & FORMULAS */}
           {activeTab === 'methodology' && (
             <div className="space-y-4">
-              <h3 className="font-bold text-slate-900 text-sm">Core Mathematical Formulations & Definitions</h3>
-              <div className="space-y-2.5">
-                {details.formulas.map((f, idx) => (
-                  <div key={idx} className="p-3.5 rounded-xl bg-slate-900 text-amber-300 font-mono text-xs shadow-inner">
-                    <code>{f}</code>
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-slate-900 text-sm">Core Mathematical Formulations & Standard Definitions</h3>
+                <span className="text-[11px] text-slate-500 font-medium">MoSPI Official Methodology</span>
+              </div>
+
+              <div className="space-y-4">
+                {details.formulas.map((item, idx) => (
+                  <div key={idx} className="rounded-xl border border-slate-200 overflow-hidden shadow-sm bg-white">
+                    {/* Formula Header */}
+                    <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex items-center justify-between">
+                      <span className="font-bold text-xs text-slate-900">{item.name}</span>
+                      <span className="text-[10px] uppercase font-bold text-mospi-700 bg-mospi-100 px-2 py-0.5 rounded">Formula {idx + 1}</span>
+                    </div>
+
+                    {/* Equation Banner */}
+                    <div className="bg-slate-900 text-amber-300 p-4 font-mono text-sm sm:text-base font-bold text-center tracking-wide overflow-x-auto">
+                      {item.display}
+                    </div>
+
+                    {/* Variable Definitions */}
+                    <div className="p-4 bg-white space-y-2 text-xs">
+                      <p className="font-bold text-slate-800 text-[11px] uppercase tracking-wider">Where:</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {item.variables.map((v, vIdx) => (
+                          <div key={vIdx} className="p-2 rounded-lg bg-slate-50 border border-slate-100 flex items-start gap-2">
+                            <span className="font-mono font-bold text-mospi-900 bg-white px-1.5 py-0.5 rounded border border-slate-200 text-[11px] flex-shrink-0">{v.sym}</span>
+                            <span className="text-slate-600 text-[11px] leading-tight">{v.desc}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Takeaway / Operational Note */}
+                      <div className="mt-2 pt-2 border-t border-slate-100 flex items-start gap-1.5 text-[11px] text-slate-600">
+                        <Info className="w-3.5 h-3.5 text-mospi-700 flex-shrink-0 mt-0.5" />
+                        <span><strong className="text-slate-800">Operational Application:</strong> {item.note}</span>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
 
               <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl text-xs text-blue-950 space-y-1.5">
                 <h4 className="font-bold flex items-center gap-1.5 text-blue-900">
-                  <Building2 className="w-4 h-4" /> MoSPI Implementation Note
+                  <Building2 className="w-4 h-4" /> MoSPI National Quality Assurance Note
                 </h4>
                 <p className="leading-relaxed">
-                  All estimators are audited under UN NQAF standards. Data submitted through official cadres must conform to the latest National Quality Assurance Framework released by MoSPI.
+                  All estimators and formulas above are certified under UN NQAF standards. Data submitted through official cadres must conform to the latest methodology published in MoSPI Annual Survey Manuals.
                 </p>
               </div>
             </div>
@@ -248,21 +389,21 @@ export const ModuleReaderModal = ({ resource, isOpen, onClose }) => {
 
           {/* TAB 3: PRACTICE & VERIFICATION */}
           {activeTab === 'practice' && (
-            <div className="space-y-4 text-center py-4">
+            <div className="space-y-4 text-center py-6">
               <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto shadow-sm">
                 <Sparkles className="w-6 h-6" />
               </div>
               <div className="max-w-md mx-auto space-y-1">
                 <h3 className="text-base font-bold text-slate-900">Generate AI Quiz from this Module</h3>
-                <p className="text-xs text-slate-500">
-                  Validate your comprehension of "{title}" by generating an AI-evaluated MCQ examination with instant demonstrable competency gains.
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Validate your comprehension of <span className="font-semibold text-slate-800">"{title}"</span> by generating an AI-evaluated MCQ examination powered by Groq and Google Gemini AI.
                 </p>
               </div>
 
-              <div className="pt-2">
+              <div className="pt-3">
                 <button
                   onClick={handleLaunchQuiz}
-                  className="px-6 py-3 bg-mospi-900 hover:bg-mospi-800 text-white rounded-xl text-xs font-bold shadow-lg shadow-mospi-900/20 transition inline-flex items-center gap-2"
+                  className="px-6 py-3 bg-mospi-900 hover:bg-mospi-800 text-white rounded-xl text-xs font-bold shadow-lg shadow-mospi-900/20 transition inline-flex items-center gap-2 cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4 text-amber-300" />
                   <span>Launch AI Quiz Studio on this Topic</span>
@@ -274,19 +415,19 @@ export const ModuleReaderModal = ({ resource, isOpen, onClose }) => {
 
         {/* Modal Footer */}
         <div className="bg-slate-50 p-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-          <a
-            href={official_url || "https://www.mospi.gov.in"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition"
+          <button
+            type="button"
+            onClick={handleOpenPortal}
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition cursor-pointer shadow-sm"
           >
             <span>Visit MoSPI Official Portal</span>
             <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
-          </a>
+          </button>
 
           <button
+            type="button"
             onClick={handleLaunchQuiz}
-            className="inline-flex items-center gap-1.5 px-5 py-2 bg-mospi-900 hover:bg-mospi-800 text-white rounded-lg text-xs font-bold shadow-sm transition"
+            className="inline-flex items-center gap-1.5 px-5 py-2 bg-mospi-900 hover:bg-mospi-800 text-white rounded-lg text-xs font-bold shadow-sm transition cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
             <span>Generate AI Quiz</span>
