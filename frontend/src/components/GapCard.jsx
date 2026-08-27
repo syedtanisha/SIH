@@ -50,14 +50,21 @@ export const GapCard = ({ gapItem }) => {
         {/* Header */}
         <div className="flex items-start justify-between gap-2 mb-3">
           <div>
-            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-              {domain}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                {domain}
+              </span>
+              {gapItem.is_role_core && (
+                <span className="text-[9px] font-bold bg-blue-100 text-blue-800 border border-blue-200 px-1.5 py-0.2 rounded">
+                  Core Role Requirement
+                </span>
+              )}
+            </div>
             <h3 className="text-sm font-bold text-slate-900 leading-snug mt-0.5">
               {name}
             </h3>
           </div>
-          <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${style.badge}`}>
+          <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border flex-shrink-0 ${style.badge}`}>
             {priority === 'Met' ? 'Benchmark Met' : `${priority} Priority`}
           </span>
         </div>

@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+import asyncio
 from ..models.models import (
     User,
     Document,
@@ -10,7 +11,8 @@ from ..models.models import (
     Quiz,
     QuizQuestion,
     QuizAttempt,
-    LearningProgressHistory
+    LearningProgressHistory,
+    LearningResource
 )
 from ..schemas.quiz import (
     QuizGenerateRequest,
@@ -21,13 +23,21 @@ from ..schemas.quiz import (
     QuizAttemptResultOut,
     QuestionResultDetail
 )
-from .ai_service import generate_mcqs_from_text
+from .ai_service import generate_mcqs_from_text, generate_grok_quiz_feedback
 
 def create_ai_quiz(request: QuizGenerateRequest, user_id: int, db: Session) -> QuizOut:
     source_text = ""
     doc_obj = None
+    target_comp = None
 
-    if request.document_id:
+    if request.resource_id:
+        res_obj = db.query(LearningResource).filter(LearningResource.id == request.resource_id).first()
+        if res_obj:
+            source_text = f"Title: {res_obj.title}\nSource: {res_obj.source}\nType: {res_obj.resource_type}\nDescription: {res_obj.description}\nOfficial Curriculum on {res_obj.title}"
+            # Extract target competency from mappings if available
+            if res_obj.competency_mappings:
+                target_comp = res_obj.competency_mappings[0].competency
+    elif request.document_id:
         doc_obj = db.query(Document).filter(
             Document.id == request.document_id,
             Document.user_id == user_id
@@ -44,7 +54,6 @@ def create_ai_quiz(request: QuizGenerateRequest, user_id: int, db: Session) -> Q
         source_text = f"Official statistical concepts and guidelines on {request.topic}"
 
     # Determine aligned competency
-    target_comp = None
     if request.competency_id:
         target_comp = db.query(Competency).filter(Competency.id == request.competency_id).first()
     if not target_comp:
@@ -200,12 +209,25 @@ def evaluate_quiz_submission(quiz_id: int, user_id: int, submission: QuizSubmitR
         )
         db.add(hist)
 
+    mistakes = [
+        {
+            "question_text": q.question_text,
+            "user_selected": q.user_selected,
+            "correct_option": q.correct_option,
+            "explanation": q.explanation
+        }
+        for q in question_results if not q.is_correct
+    ]
+
     feedback = (
-        f"You scored {score_pct}% ({total_correct}/{len(questions)} correct). "
+        f"Grok AI Performance Analysis: You scored {score_pct}% ({total_correct}/{len(questions)} correct). "
         f"Your competency in '{comp_obj.name if comp_obj else quiz.topic}' improved by +{delta}% "
         f"(from {before_score}% to {after_score}%). "
-        f"Review the question explanations below to reinforce key statistical methodologies."
     )
+    if mistakes:
+        feedback += f"You missed {len(mistakes)} question(s). Review the detailed pedagogical explanations below to reinforce official methodology before the next milestone."
+    else:
+        feedback += "Outstanding result with 100% precision! Your statistical understanding aligns completely with Ministry benchmarks. Continue along your learning path."
 
     attempt = QuizAttempt(
         quiz_id=quiz.id,

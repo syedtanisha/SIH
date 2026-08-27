@@ -75,6 +75,209 @@ COMPETENCIES_SEED = [
     }
 ]
 
+DIVISION_PROFILES = {
+    "MoSPI National Accounts Division (NAD)": {
+        "division_code": "NAD",
+        "description": "Compilation of GDP, GVA, Supply and Use Tables, and capital formation accounts under SNA 2008 framework.",
+        "core_competencies": ["STAT_NAT_ACC", "STAT_COMPUTE", "STAT_PRICE_IND", "STAT_QUALITY", "STAT_DATA_GOV"],
+        "benchmarks": {
+            "STAT_NAT_ACC": 90.0,
+            "STAT_COMPUTE": 85.0,
+            "STAT_PRICE_IND": 80.0,
+            "STAT_QUALITY": 80.0,
+            "STAT_DATA_GOV": 75.0,
+            "STAT_SURVEY": 70.0,
+            "STAT_LABOUR": 70.0,
+            "STAT_VIZ_COMM": 75.0,
+            "STAT_IND_AGRI": 75.0
+        },
+        "weights": {
+            "STAT_NAT_ACC": 1.5,
+            "STAT_COMPUTE": 1.3,
+            "STAT_PRICE_IND": 1.2,
+            "STAT_QUALITY": 1.1,
+            "STAT_DATA_GOV": 1.0,
+            "STAT_SURVEY": 0.9,
+            "STAT_LABOUR": 0.9,
+            "STAT_VIZ_COMM": 1.0,
+            "STAT_IND_AGRI": 1.0
+        }
+    },
+    "MoSPI Field Operations Division (FOD)": {
+        "division_code": "FOD",
+        "description": "Execution of nationwide socioeconomic sample surveys (PLFS, HCES), ASI field visits, and data collection.",
+        "core_competencies": ["STAT_SURVEY", "STAT_LABOUR", "STAT_QUALITY", "STAT_IND_AGRI", "STAT_DATA_GOV"],
+        "benchmarks": {
+            "STAT_SURVEY": 92.0,
+            "STAT_LABOUR": 88.0,
+            "STAT_QUALITY": 85.0,
+            "STAT_IND_AGRI": 80.0,
+            "STAT_DATA_GOV": 75.0,
+            "STAT_COMPUTE": 75.0,
+            "STAT_PRICE_IND": 75.0,
+            "STAT_NAT_ACC": 70.0,
+            "STAT_VIZ_COMM": 70.0
+        },
+        "weights": {
+            "STAT_SURVEY": 1.5,
+            "STAT_LABOUR": 1.4,
+            "STAT_QUALITY": 1.3,
+            "STAT_IND_AGRI": 1.2,
+            "STAT_DATA_GOV": 1.0,
+            "STAT_COMPUTE": 1.0,
+            "STAT_PRICE_IND": 1.0,
+            "STAT_NAT_ACC": 0.8,
+            "STAT_VIZ_COMM": 0.8
+        }
+    },
+    "MoSPI Economic Statistics Division (ESD)": {
+        "division_code": "ESD",
+        "description": "Compilation of Consumer Price Index (CPI), Index of Industrial Production (IIP), and Annual Survey of Industries.",
+        "core_competencies": ["STAT_PRICE_IND", "STAT_IND_AGRI", "STAT_COMPUTE", "STAT_QUALITY", "STAT_NAT_ACC"],
+        "benchmarks": {
+            "STAT_PRICE_IND": 92.0,
+            "STAT_IND_AGRI": 88.0,
+            "STAT_COMPUTE": 82.0,
+            "STAT_QUALITY": 82.0,
+            "STAT_NAT_ACC": 80.0,
+            "STAT_DATA_GOV": 78.0,
+            "STAT_SURVEY": 75.0,
+            "STAT_LABOUR": 72.0,
+            "STAT_VIZ_COMM": 75.0
+        },
+        "weights": {
+            "STAT_PRICE_IND": 1.5,
+            "STAT_IND_AGRI": 1.4,
+            "STAT_COMPUTE": 1.2,
+            "STAT_QUALITY": 1.2,
+            "STAT_NAT_ACC": 1.1,
+            "STAT_DATA_GOV": 1.0,
+            "STAT_SURVEY": 0.9,
+            "STAT_LABOUR": 0.9,
+            "STAT_VIZ_COMM": 0.9
+        }
+    },
+    "MoSPI Survey Design & Research Division (SDRD)": {
+        "division_code": "SDRD",
+        "description": "Design of sampling frames, questionnaire formulation, estimation procedures, and survey research manuals.",
+        "core_competencies": ["STAT_SURVEY", "STAT_COMPUTE", "STAT_QUALITY", "STAT_LABOUR", "STAT_VIZ_COMM"],
+        "benchmarks": {
+            "STAT_SURVEY": 95.0,
+            "STAT_COMPUTE": 88.0,
+            "STAT_QUALITY": 88.0,
+            "STAT_LABOUR": 82.0,
+            "STAT_VIZ_COMM": 80.0,
+            "STAT_DATA_GOV": 80.0,
+            "STAT_NAT_ACC": 72.0,
+            "STAT_PRICE_IND": 72.0,
+            "STAT_IND_AGRI": 72.0
+        },
+        "weights": {
+            "STAT_SURVEY": 1.6,
+            "STAT_COMPUTE": 1.3,
+            "STAT_QUALITY": 1.3,
+            "STAT_LABOUR": 1.1,
+            "STAT_VIZ_COMM": 1.0,
+            "STAT_DATA_GOV": 1.0,
+            "STAT_NAT_ACC": 0.8,
+            "STAT_PRICE_IND": 0.8,
+            "STAT_IND_AGRI": 0.8
+        }
+    },
+    "MoSPI Data Quality & Dissemination Division (DQDD)": {
+        "division_code": "DQDD",
+        "description": "eSankhyiki management, open microdata dissemination, SDG indicators, metadata standards, and data auditing.",
+        "core_competencies": ["STAT_DATA_GOV", "STAT_VIZ_COMM", "STAT_QUALITY", "STAT_COMPUTE", "STAT_SURVEY"],
+        "benchmarks": {
+            "STAT_DATA_GOV": 92.0,
+            "STAT_VIZ_COMM": 90.0,
+            "STAT_QUALITY": 88.0,
+            "STAT_COMPUTE": 85.0,
+            "STAT_SURVEY": 78.0,
+            "STAT_NAT_ACC": 75.0,
+            "STAT_PRICE_IND": 75.0,
+            "STAT_LABOUR": 75.0,
+            "STAT_IND_AGRI": 72.0
+        },
+        "weights": {
+            "STAT_DATA_GOV": 1.5,
+            "STAT_VIZ_COMM": 1.4,
+            "STAT_QUALITY": 1.3,
+            "STAT_COMPUTE": 1.2,
+            "STAT_SURVEY": 1.0,
+            "STAT_NAT_ACC": 0.9,
+            "STAT_PRICE_IND": 0.9,
+            "STAT_LABOUR": 0.9,
+            "STAT_IND_AGRI": 0.8
+        }
+    },
+    "State DES (Directorate of Economics & Statistics)": {
+        "division_code": "DES",
+        "description": "State domestic product (GSDP), district-level statistics, local price collection, and state statistical coordination.",
+        "core_competencies": ["STAT_SURVEY", "STAT_PRICE_IND", "STAT_NAT_ACC", "STAT_DATA_GOV", "STAT_IND_AGRI"],
+        "benchmarks": {
+            "STAT_SURVEY": 85.0,
+            "STAT_PRICE_IND": 85.0,
+            "STAT_NAT_ACC": 82.0,
+            "STAT_DATA_GOV": 78.0,
+            "STAT_IND_AGRI": 78.0,
+            "STAT_QUALITY": 78.0,
+            "STAT_COMPUTE": 75.0,
+            "STAT_LABOUR": 75.0,
+            "STAT_VIZ_COMM": 72.0
+        },
+        "weights": {
+            "STAT_SURVEY": 1.3,
+            "STAT_PRICE_IND": 1.3,
+            "STAT_NAT_ACC": 1.2,
+            "STAT_DATA_GOV": 1.1,
+            "STAT_IND_AGRI": 1.1,
+            "STAT_QUALITY": 1.0,
+            "STAT_COMPUTE": 1.0,
+            "STAT_LABOUR": 0.9,
+            "STAT_VIZ_COMM": 0.9
+        }
+    },
+    "Ministry Line Department / NITI Aayog": {
+        "division_code": "POLICY",
+        "description": "Policy analytics, Sustainable Development Goal tracking, inter-ministerial data coordination, and official reporting.",
+        "core_competencies": ["STAT_VIZ_COMM", "STAT_DATA_GOV", "STAT_NAT_ACC", "STAT_QUALITY", "STAT_COMPUTE"],
+        "benchmarks": {
+            "STAT_VIZ_COMM": 90.0,
+            "STAT_DATA_GOV": 85.0,
+            "STAT_NAT_ACC": 85.0,
+            "STAT_QUALITY": 82.0,
+            "STAT_COMPUTE": 80.0,
+            "STAT_SURVEY": 75.0,
+            "STAT_PRICE_IND": 75.0,
+            "STAT_LABOUR": 75.0,
+            "STAT_IND_AGRI": 72.0
+        },
+        "weights": {
+            "STAT_VIZ_COMM": 1.5,
+            "STAT_DATA_GOV": 1.3,
+            "STAT_NAT_ACC": 1.3,
+            "STAT_QUALITY": 1.1,
+            "STAT_COMPUTE": 1.1,
+            "STAT_SURVEY": 0.9,
+            "STAT_PRICE_IND": 0.9,
+            "STAT_LABOUR": 0.9,
+            "STAT_IND_AGRI": 0.8
+        }
+    }
+}
+
+DESIGNATION_MODIFIERS = {
+    "Director": {"benchmark_delta": 6.0, "weight_multiplier": 1.15, "seniority": "Senior Leadership"},
+    "Joint Director": {"benchmark_delta": 5.0, "weight_multiplier": 1.12, "seniority": "Senior Leadership"},
+    "Dy. Director": {"benchmark_delta": 4.0, "weight_multiplier": 1.10, "seniority": "Middle Management"},
+    "Assistant Director": {"benchmark_delta": 2.0, "weight_multiplier": 1.05, "seniority": "Junior Cadre Leadership"},
+    "Senior Statistical Officer": {"benchmark_delta": 2.0, "weight_multiplier": 1.05, "seniority": "Technical Supervisory"},
+    "Junior Statistical Officer": {"benchmark_delta": 0.0, "weight_multiplier": 1.00, "seniority": "Technical Operations"},
+    "Statistical Investigator": {"benchmark_delta": -2.0, "weight_multiplier": 0.95, "seniority": "Field Execution"},
+    "Data Analyst": {"benchmark_delta": 2.0, "weight_multiplier": 1.05, "seniority": "Analytical Technical"}
+}
+
 BASELINE_QUESTIONS = [
     {
         "id": 1,
@@ -201,8 +404,22 @@ BASELINE_QUESTIONS = [
             {"key": "C", "text": "NVA = Total Inputs - Fuel Consumption"},
             {"key": "D", "text": "NVA = Gross Fixed Capital / Working Capital"}
         ],
-        "correct_option": "A",
-        "explanation": "In ASI accounting, Gross Value Added = Gross Output - Total Inputs. Net Value Added (NVA) is then calculated by deducting the consumption of fixed capital (Depreciation) from GVA."
+    },
+    {
+        "id": 9,
+        "competency_code": "STAT_VIZ_COMM",
+        "competency_name": "Data Visualization & Official Communication",
+        "domain": "Dissemination",
+        "difficulty": "Intermediate",
+        "question_text": "In the National Indicator Framework (NIF) for Sustainable Development Goals (SDGs) coordinated by MoSPI, what is the primary role of official interactive dashboards?",
+        "options": [
+            {"key": "A", "text": "To replace official gazette notifications completely"},
+            {"key": "B", "text": "To enable transparent, interactive tracking of baseline targets and progress across States and Union Territories for policy makers"},
+            {"key": "C", "text": "To store encrypted raw census files exclusively"},
+            {"key": "D", "text": "To restrict public viewing of administrative metrics"}
+        ],
+        "correct_option": "B",
+        "explanation": "MoSPI's SDG National Indicator Framework dashboard visualizes indicator progress across goals and states to support evidence-based policy making and public transparency."
     }
 ]
 
@@ -296,5 +513,25 @@ RESOURCES_SEED = [
         "difficulty": "Foundational",
         "estimated_duration_mins": 140,
         "competency_code": "STAT_IND_AGRI"
+    },
+    {
+        "title": "MoSPI Sustainable Development Goals (SDG) National Indicator Report",
+        "description": "Guidelines on metadata construction, baseline-to-target tracking, data visualization dashboards, and state progress comparison reports.",
+        "source": "MoSPI",
+        "official_url": "https://mospi.gov.in/sdg-national-indicator-report",
+        "resource_type": "Publication",
+        "difficulty": "Intermediate",
+        "estimated_duration_mins": 130,
+        "competency_code": "STAT_VIZ_COMM"
+    },
+    {
+        "title": "NSSTA Quality Assurance & Audit Handbook for Official Statistics",
+        "description": "Practical implementation of UN NQAF standards, data validation checklists, non-sampling error auditing, and field supervision manuals.",
+        "source": "NSSTA",
+        "official_url": "https://nssta.gov.in/curriculum/quality-assurance-handbook",
+        "resource_type": "Training_Module",
+        "difficulty": "Advanced",
+        "estimated_duration_mins": 160,
+        "competency_code": "STAT_QUALITY"
     }
 ]

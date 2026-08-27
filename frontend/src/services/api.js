@@ -55,6 +55,7 @@ export const assessmentApi = {
 
 export const recommendationApi = {
   getForYou: () => api.get('/recommendations/for-you'),
+  getLearningPath: () => api.get('/recommendations/learning-path'),
 };
 
 export const resourceApi = {

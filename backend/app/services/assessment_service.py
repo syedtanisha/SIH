@@ -11,9 +11,24 @@ from ..schemas.assessment import (
 )
 from ..data.seed_data import BASELINE_QUESTIONS
 
-def get_baseline_assessment_data() -> BaselineAssessmentOut:
+def get_baseline_assessment_data(user: User = None) -> BaselineAssessmentOut:
     questions_out: List[BaselineQuestion] = []
-    for q in BASELINE_QUESTIONS:
+    
+    # Sort or prioritize questions based on user's core competencies if available
+    core_codes = []
+    div_title = "Official Statistical System"
+    if user:
+        from .competency_service import resolve_role_benchmarks
+        role_meta = resolve_role_benchmarks(user.department, user.designation)
+        core_codes = role_meta.get("core_competencies", [])
+        div_title = user.department or "MoSPI"
+
+    sorted_q_list = sorted(
+        BASELINE_QUESTIONS,
+        key=lambda q: (0 if q["competency_code"] in core_codes else 1, q["id"])
+    )
+
+    for q in sorted_q_list:
         options = [BaselineQuestionOption(key=opt["key"], text=opt["text"]) for opt in q["options"]]
         questions_out.append(
             BaselineQuestion(
@@ -29,8 +44,8 @@ def get_baseline_assessment_data() -> BaselineAssessmentOut:
 
     return BaselineAssessmentOut(
         assessment_id="mospi-baseline-diagnostic-v1",
-        title="India's Official Statistical System - Baseline Diagnostic Assessment",
-        instructions="Complete this diagnostic evaluation to calibrate your initial competency baseline across core official statistical disciplines (Survey Design, National Accounts, Price Indices, Data Governance, and Computing).",
+        title=f"Baseline Diagnostic Assessment ({div_title})",
+        instructions=f"Complete this calibrated diagnostic evaluation to calibrate your initial competency baseline against official {div_title} benchmarks across core statistical disciplines.",
         total_questions=len(questions_out),
         time_limit_mins=20,
         questions=questions_out

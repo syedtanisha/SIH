@@ -2,9 +2,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from ..db.database import get_db
 from ..models.models import User
-from ..schemas.resource import RecommendationResponse
+from ..schemas.resource import RecommendationResponse, LearningPathResponse
 from ..core.security import get_current_user
-from ..services.recommendation_service import get_personalized_recommendations
+from ..services.recommendation_service import (
+    get_personalized_recommendations,
+    get_personalized_learning_path
+)
 
 router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
 
@@ -14,3 +17,10 @@ def get_for_you_recommendations(
     db: Session = Depends(get_db)
 ):
     return get_personalized_recommendations(current_user.id, db)
+
+@router.get("/learning-path", response_model=LearningPathResponse)
+def get_my_learning_path(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return get_personalized_learning_path(current_user.id, db)

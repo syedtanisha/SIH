@@ -87,7 +87,7 @@ def get_user_progress_summary(user_id: int, db: Session) -> ProgressSummaryOut:
         designation=user.designation if user else "Statistical Officer",
         department=user.department if user else "MoSPI",
         overall_readiness_score=overall_readiness,
-        total_learning_gain=(total_gain_sum / len(all_competencies), 1) if all_competencies else 0.0,
+        total_learning_gain=round(total_gain_sum / len(all_competencies), 1) if all_competencies else 0.0,
         quizzes_completed=len(attempts),
         average_quiz_score=avg_quiz_score,
         competency_breakdown=cards,

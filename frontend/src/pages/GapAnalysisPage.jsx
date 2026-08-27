@@ -41,17 +41,29 @@ export const GapAnalysisPage = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-mospi-900 via-mospi-800 to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-lg border border-mospi-700/50 space-y-4">
-        <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
-          <BrainCircuit className="w-4 h-4" />
-          <span>Deterministic & AI Gap Diagnostics</span>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
+            <BrainCircuit className="w-4 h-4" />
+            <span>Role-Specific Deterministic & AI Gap Diagnostics</span>
+          </div>
+          {gapData?.user_division && (
+            <div className="flex items-center gap-2 text-xs">
+              <span className="bg-blue-900/60 border border-blue-400/40 text-blue-200 px-2.5 py-0.5 rounded-full font-semibold">
+                {gapData.user_division}
+              </span>
+              <span className="bg-indigo-900/60 border border-indigo-400/40 text-indigo-200 px-2.5 py-0.5 rounded-full font-semibold">
+                {gapData.user_designation}
+              </span>
+            </div>
+          )}
         </div>
         <h1 className="text-xl sm:text-3xl font-bold tracking-tight">
           Competency Gap Analysis & Capacity Diagnosis
         </h1>
         <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
-          The system evaluates your assessed competency levels against official Ministry benchmarks: <br />
+          The system evaluates your assessed competency levels against official benchmarks calibrated for your division & designation: <br />
           <code className="bg-black/30 px-2 py-0.5 rounded text-amber-300 font-mono text-xs">
-            Required Benchmark Level - Current Assessed Level = Competency Gap
+            Role Required Benchmark Level - Current Assessed Level = Competency Gap
           </code>
         </p>
       </div>

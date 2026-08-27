@@ -10,6 +10,10 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = "sqlite:///./statlearn.db"
 
+    GROK_API_KEY: Optional[str] = None
+    XAI_API_KEY: Optional[str] = None
+    GROK_MODEL: str = "grok-2-latest"
+    XAI_BASE_URL: str = "https://api.x.ai/v1"
     GROQ_API_KEY: Optional[str] = None
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
     GEMINI_API_KEY: Optional[str] = None

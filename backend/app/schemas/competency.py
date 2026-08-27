@@ -30,6 +30,7 @@ class UserCompetencyDetail(BaseModel):
     current_level: float
     gap: float
     priority: str # 'High', 'Medium', 'Low', 'Met'
+    is_role_core: bool = False
     last_assessed_at: Optional[datetime] = None
 
 class CompetencyProfileOut(BaseModel):
@@ -37,6 +38,9 @@ class CompetencyProfileOut(BaseModel):
     total_competencies: int
     competencies_met_count: int
     active_gaps_count: int
+    user_division: Optional[str] = None
+    user_designation: Optional[str] = None
+    cadre_seniority: Optional[str] = None
     competencies: List[UserCompetencyDetail]
 
 class CompetencyGapItem(BaseModel):
@@ -49,11 +53,15 @@ class CompetencyGapItem(BaseModel):
     gap: float
     priority: str
     priority_score: float
+    is_role_core: bool = False
     recommended_focus_action: str
 
 class CompetencyGapAnalysisOut(BaseModel):
     total_gaps_identified: int
     critical_gaps_count: int
     primary_focus_domain: str
+    user_division: Optional[str] = None
+    user_designation: Optional[str] = None
+    cadre_seniority: Optional[str] = None
     gaps: List[CompetencyGapItem]
     ai_diagnosis_summary: str

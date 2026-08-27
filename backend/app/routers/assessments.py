@@ -17,7 +17,7 @@ router = APIRouter(prefix="/assessments", tags=["Assessments"])
 
 @router.get("/baseline", response_model=BaselineAssessmentOut)
 def get_baseline_assessment(current_user: User = Depends(get_current_user)):
-    return get_baseline_assessment_data()
+    return get_baseline_assessment_data(current_user)
 
 @router.post("/baseline/submit", response_model=BaselineAssessmentResultOut)
 def submit_baseline_assessment(

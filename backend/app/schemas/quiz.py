@@ -19,6 +19,7 @@ class MCQGeneratedQuestion(BaseModel):
 
 class QuizGenerateRequest(BaseModel):
     document_id: Optional[int] = None
+    resource_id: Optional[int] = None
     custom_text: Optional[str] = None
     topic: str
     num_questions: int = Field(default=5, ge=1, le=20)
