@@ -96,6 +96,7 @@ def resolve_role_benchmarks(department: str = "", designation: str = "") -> Dict
     calibrated_weights = {}
 
     for comp_code, base_val in div_profile["benchmarks"].items():
+        # Adjust benchmark by designation seniority (constrained between 60% and 98%)
         calibrated_benchmarks[comp_code] = min(98.0, max(60.0, round(base_val + delta, 1)))
 
     for comp_code, base_w in div_profile["weights"].items():
@@ -202,7 +203,7 @@ def analyze_competency_gaps(user_id: int, db: Session) -> CompetencyGapAnalysisO
         role_weight = role_meta["weights"].get(item.code, 1.0)
         priority_score = round(item.gap * role_weight, 2)
 
-        focus_action = f"Complete recommended iGOT courses & MoSPI study material on {item.name}"
+        focus_action = f"Complete recommended NSSTA modules & MoSPI study material on {item.name}"
         if item.priority == "High":
             focus_action = f"Immediate priority for {user.department if user else 'your role'}: Study core methodology for {item.name} and take verification quizzes."
         elif item.priority == "Met":

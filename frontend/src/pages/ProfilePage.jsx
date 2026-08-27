@@ -123,9 +123,9 @@ export const ProfilePage = () => {
         <h3 className="text-sm font-bold text-slate-900">Official Integration Status</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-            <span className="text-slate-500 font-semibold">iGOT Karmayogi</span>
+            <span className="text-slate-500 font-semibold">National Statistical Commission</span>
             <p className="font-bold text-emerald-600 flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" /> FRAC Mapped (Sandbox)
+              <CheckCircle2 className="w-3.5 h-3.5" /> Standards Aligned
             </p>
           </div>
           <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">

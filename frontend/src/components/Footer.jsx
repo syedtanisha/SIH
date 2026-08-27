@@ -15,12 +15,12 @@ export const Footer = () => {
               <span>AI-Enabled Capacity Building for India's Official Statistical System</span>
             </div>
             <p className="text-slate-400 leading-relaxed pr-6">
-              Developed to strengthen institutional capacity across the Ministry of Statistics and Programme Implementation (MoSPI), National Statistical Systems Training Academy (NSSTA), State Directorates of Economics & Statistics (DES), and Indian Statistical Service (ISS/SSS) cadres through adaptive competency modeling, AI quiz synthesis, and iGOT Karmayogi alignment.
+              Developed to strengthen institutional capacity across the Ministry of Statistics and Programme Implementation (MoSPI), National Statistical Systems Training Academy (NSSTA), State Directorates of Economics & Statistics (DES), and Indian Statistical Service (ISS/SSS) cadres through adaptive competency modeling, AI quiz synthesis, and NSSTA academy alignment.
             </p>
             <div className="flex items-center gap-4 text-[11px] text-slate-500">
               <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> UN Fundamental Principles</span>
               <span className="flex items-center gap-1"><Database className="w-3.5 h-3.5 text-blue-400" /> eSankhyiki Data Standards</span>
-              <span className="flex items-center gap-1"><Award className="w-3.5 h-3.5 text-amber-400" /> FRAC Framework</span>
+              <span className="flex items-center gap-1"><Award className="w-3.5 h-3.5 text-amber-400" /> MoSPI Cadre Framework</span>
             </div>
           </div>
 
@@ -34,7 +34,7 @@ export const Footer = () => {
                 </a>
               </li>
               <li>
-                <a href="https://nssta.gov.in" target="_blank" rel="noreferrer" className="hover:text-white transition flex items-center gap-1">
+                <a href="https://www.mospi.gov.in/national-statistical-systems-training-academy-nssta" target="_blank" rel="noreferrer" className="hover:text-white transition flex items-center gap-1">
                   NSSTA Greater Noida <ExternalLink className="w-3 h-3 text-slate-500" />
                 </a>
               </li>
@@ -44,8 +44,8 @@ export const Footer = () => {
                 </a>
               </li>
               <li>
-                <a href="https://igotkarmayogi.gov.in" target="_blank" rel="noreferrer" className="hover:text-white transition flex items-center gap-1">
-                  iGOT Karmayogi Platform <ExternalLink className="w-3 h-3 text-slate-500" />
+                <a href="https://www.nscindia.gov.in" target="_blank" rel="noreferrer" className="hover:text-white transition flex items-center gap-1">
+                  National Statistical Commission <ExternalLink className="w-3 h-3 text-slate-500" />
                 </a>
               </li>
             </ul>

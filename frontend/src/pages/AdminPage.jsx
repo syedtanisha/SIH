@@ -60,7 +60,7 @@ export const AdminPage = () => {
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-1">
           <span className="text-xs text-slate-500 font-medium">Learning Resources</span>
           <p className="text-2xl font-black text-slate-900">{stats?.total_learning_resources || 0}</p>
-          <span className="text-[11px] text-slate-400">iGOT / NSSTA / MoSPI</span>
+          <span className="text-[11px] text-slate-400">NSSTA / MoSPI / eSankhyiki</span>
         </div>
 
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-1">

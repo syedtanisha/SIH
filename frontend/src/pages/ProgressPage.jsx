@@ -69,7 +69,7 @@ export const ProgressPage = () => {
           Competency Progression Analytics
         </h1>
         <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
-          Tracking demonstrable skill gains achieved across baseline assessments, iGOT Karmayogi coursework, and AI Learning Studio quizzes.
+          Tracking demonstrable skill gains achieved across baseline assessments, NSSTA training modules, and AI Learning Studio quizzes.
         </p>
       </div>
 

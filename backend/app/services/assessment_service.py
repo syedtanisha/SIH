@@ -69,6 +69,7 @@ def evaluate_baseline_submission(user_id: int, submission: BaselineAssessmentSub
 
         domain_totals[domain] = domain_totals.get(domain, 0) + 1
         user_ans = answers_map.get(qid, "")
+        correct_ans = q.get("correct_option", "A")
 
         is_correct = (user_ans == correct_ans)
         if is_correct:

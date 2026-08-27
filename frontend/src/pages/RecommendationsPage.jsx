@@ -25,7 +25,7 @@ export const RecommendationsPage = () => {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-16 text-center text-slate-500 text-xs">
-        Matching iGOT Karmayogi, NSSTA, and MoSPI resources to your competency gaps...
+        Matching NSSTA and MoSPI resources to your competency gaps...
       </div>
     );
   }
@@ -45,7 +45,7 @@ export const RecommendationsPage = () => {
         </h1>
         <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
           Targeting your primary competency gap in <strong className="text-amber-300">{data?.primary_focus_gap}</strong> ({data?.gap_percentage}% gap). 
-          Integrating verified Competency Building Products (CBPs) from iGOT Karmayogi, NSSTA Greater Noida laboratory manuals, and MoSPI official publications.
+          Integrating verified modules from NSSTA Greater Noida laboratory manuals and MoSPI official publications.
         </p>
       </div>
 

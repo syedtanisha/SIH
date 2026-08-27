@@ -56,8 +56,8 @@ export const Navbar = () => {
                 <span className="text-xs font-semibold uppercase tracking-wider text-mospi-700 bg-mospi-50 px-1.5 py-0.5 rounded border border-mospi-200">
                   MoSPI • NSSTA
                 </span>
-                <span className="text-[10px] bg-amber-100 text-amber-800 font-medium px-1 rounded">
-                  iGOT Aligned
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-medium px-1 rounded">
+                  Official Cadre Platform
                 </span>
               </div>
               <h1 className="text-base font-bold text-slate-900 tracking-tight leading-tight">

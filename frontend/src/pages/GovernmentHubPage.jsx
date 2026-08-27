@@ -18,9 +18,9 @@ export const GovernmentHubPage = () => {
       setLoading(true);
       try {
         let sourceFilter = undefined;
-        if (activeTab === 'igot') sourceFilter = 'iGOT_Karmayogi';
         if (activeTab === 'nssta') sourceFilter = 'NSSTA';
         if (activeTab === 'mospi') sourceFilter = 'MoSPI';
+        if (activeTab === 'esankhyiki') sourceFilter = 'eSankhyiki';
 
         const res = await resourceApi.getAll({ source: sourceFilter });
         setResources(res.data);
@@ -46,13 +46,13 @@ export const GovernmentHubPage = () => {
       <div className="bg-gradient-to-r from-mospi-900 via-mospi-800 to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-lg border border-mospi-700/50 space-y-3">
         <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
           <Building2 className="w-4 h-4" />
-          <span>Integrated Government Learning Repository</span>
+          <span>Official Statistical Learning Repository</span>
         </div>
         <h1 className="text-xl sm:text-3xl font-bold tracking-tight">
-          Government Learning Hub: iGOT, NSSTA & MoSPI
+          Government Learning Hub: NSSTA & MoSPI
         </h1>
         <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
-          Access verified official training courses, academy modules, survey manuals, and eSankhyiki data assets. Every resource is mapped to specific statistical competencies.
+          Access verified official academy modules, survey manuals, eSankhyiki data assets, and technical publications. Every resource is mapped to specific statistical competencies.
         </p>
       </div>
 
@@ -62,9 +62,8 @@ export const GovernmentHubPage = () => {
         <div className="flex gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200 overflow-x-auto">
           {[
             { key: 'all', label: 'All Resources' },
-            { key: 'igot', label: 'iGOT Karmayogi (CBPs)' },
-            { key: 'nssta', label: 'NSSTA Academy' },
-            { key: 'mospi', label: 'MoSPI & eSankhyiki' },
+            { key: 'nssta', label: 'NSSTA Academy Modules' },
+            { key: 'mospi', label: 'MoSPI Technical Manuals' },
           ].map((t) => (
             <button
               key={t.key}

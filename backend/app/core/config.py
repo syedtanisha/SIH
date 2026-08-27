@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
     GEMINI_API_KEY: Optional[str] = None
     GEMINI_MODEL: str = "gemini-1.5-flash"
+    GROK_API_KEY: Optional[str] = None
+    XAI_API_KEY: Optional[str] = None
+    GROK_MODEL: str = "grok-2-latest"
+    XAI_BASE_URL: str = "https://api.x.ai/v1"
 
     # Defaults for internal services
     AI_PROVIDER: str = "auto"

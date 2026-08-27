@@ -72,7 +72,7 @@ export const DashboardPage = () => {
             Capacity Dashboard: {user?.full_name}
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-            Real-time competency tracking calibrated with iGOT Karmayogi, NSSTA Greater Noida, and MoSPI statistical standards.
+            Real-time competency tracking calibrated with NSSTA Greater Noida and MoSPI official statistical standards.
           </p>
         </div>
 
@@ -199,7 +199,7 @@ export const DashboardPage = () => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Priority Competency Gaps</h2>
-            <p className="text-xs text-slate-500">Highest delta gaps requiring targeted upskilling through iGOT & NSSTA.</p>
+            <p className="text-xs text-slate-500">Highest delta gaps requiring targeted upskilling through NSSTA & MoSPI.</p>
           </div>
           <Link to="/recommendations" className="text-xs font-semibold text-mospi-900 hover:underline">
             See All Recommendations →

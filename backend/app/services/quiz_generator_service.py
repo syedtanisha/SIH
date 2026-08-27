@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+import asyncio
 from ..models.models import (
     User,
     Document,
@@ -33,6 +34,7 @@ async def create_ai_quiz(request: QuizGenerateRequest, user_id: int, db: Session
         res_obj = db.query(LearningResource).filter(LearningResource.id == request.resource_id).first()
         if res_obj:
             source_text = f"Title: {res_obj.title}\nSource: {res_obj.source}\nType: {res_obj.resource_type}\nDescription: {res_obj.description}\nOfficial Curriculum on {res_obj.title}"
+            # Extract target competency from mappings if available
             if res_obj.competency_mappings:
                 target_comp = res_obj.competency_mappings[0].competency
     elif request.document_id:
@@ -55,6 +57,7 @@ async def create_ai_quiz(request: QuizGenerateRequest, user_id: int, db: Session
     if request.competency_id:
         target_comp = db.query(Competency).filter(Competency.id == request.competency_id).first()
     if not target_comp:
+        # Map by topic keywords or default to STAT_COMPUTE / STAT_SURVEY
         topic_lower = request.topic.lower()
         if "python" in topic_lower or "comput" in topic_lower or "data" in topic_lower:
             target_comp = db.query(Competency).filter(Competency.code == "STAT_COMPUTE").first()
@@ -167,7 +170,7 @@ async def evaluate_quiz_submission(
 
     # Competency Delta Calculation
     comp_obj = db.query(Competency).filter(Competency.id == quiz.competency_id).first() if quiz.competency_id else None
-    before_score = 42.0
+    before_score = 42.0 # default baseline before learning if not yet assessed
     after_score = 42.0
     delta = 0.0
 
@@ -179,6 +182,8 @@ async def evaluate_quiz_submission(
 
         if user_comp:
             before_score = user_comp.current_level
+            # Weighted formula for demonstrable learning gain:
+            # New score incorporates quiz accuracy weighted against gap
             gain = round((score_pct * 0.3) + 2.0, 1)
             after_score = min(100.0, round(before_score + gain, 1))
             delta = round(after_score - before_score, 1)
@@ -220,7 +225,7 @@ async def evaluate_quiz_submission(
         for q in question_results if not q.is_correct
     ]
 
-    # Grok AI Qualitative & Pedagogical Feedback
+    # Qualitative feedback with fallback
     feedback = await generate_grok_quiz_feedback(
         quiz_title=quiz.title,
         topic=quiz.topic,

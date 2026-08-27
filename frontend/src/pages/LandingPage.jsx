@@ -25,8 +25,8 @@ export const LandingPage = () => {
     },
     {
       icon: Compass,
-      title: "iGOT & NSSTA Integration",
-      desc: "Seamlessly aligns with Mission Karmayogi's FRAC taxonomy, recommending targeted Competency Building Products (CBPs) and NSSTA training modules.",
+      title: "NSSTA & MoSPI Alignment",
+      desc: "Seamlessly aligns with National Statistical Systems Training Academy (NSSTA) curricula, recommending targeted official modules and division guidelines.",
       color: "text-emerald-600 bg-emerald-50 border-emerald-100"
     },
     {
@@ -47,7 +47,7 @@ export const LandingPage = () => {
     { step: "01", title: "Officer Registration", desc: "Select your cadre (ISS, SSS, State DES, MoSPI Field Operations)." },
     { step: "02", title: "Baseline Diagnostic Test", desc: "Evaluate foundational mastery across 9 core statistical domains." },
     { step: "03", title: "Competency Gap Diagnosis", desc: "Receive mathematical gap metrics and AI-curated study roadmap." },
-    { step: "04", title: "Targeted Official Training", desc: "Study authentic iGOT courses, NSSTA lab modules & MoSPI reports." },
+    { step: "04", title: "Targeted Official Training", desc: "Study authentic NSSTA lab modules, SDRD survey manuals & MoSPI reports." },
     { step: "05", title: "AI Document Quiz Studio", desc: "Upload manuals & generate schema-validated evaluation quizzes." },
     { step: "06", title: "Competency Delta Update", desc: "Observe measurable skill increases (+26%) and update your profile." }
   ];
@@ -70,29 +70,23 @@ export const LandingPage = () => {
           </h1>
 
           <p className="max-w-3xl mx-auto text-sm sm:text-base text-slate-300 leading-relaxed">
-            An intelligent, data-driven learning ecosystem designed to identify competency gaps, recommend personalized training through the iGOT Karmayogi platform, and generate pedagogical assessments from official learning materials.
+            An intelligent, data-driven learning ecosystem designed to identify competency gaps, recommend personalized training through NSSTA and MoSPI divisions, and generate pedagogical assessments from official learning materials.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
             <Link
-              to="/register"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition transform hover:-translate-y-0.5"
-            >
-              <span>Begin Baseline Assessment</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
               to="/login"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold text-sm border border-white/20 transition"
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition transform hover:-translate-y-0.5"
             >
               <span>Officer Sign In</span>
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
           {/* Badges row */}
           <div className="pt-8 flex flex-wrap justify-center items-center gap-6 text-xs text-slate-400 border-t border-white/10">
             <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-emerald-400" /> MoSPI & NSSTA Cadre Framework</span>
-            <span className="flex items-center gap-1.5"><Building2 className="w-4 h-4 text-blue-400" /> iGOT Karmayogi FRAC Aligned</span>
+            <span className="flex items-center gap-1.5"><Building2 className="w-4 h-4 text-blue-400" /> Official Statistical Standards</span>
             <span className="flex items-center gap-1.5"><Database className="w-4 h-4 text-amber-400" /> eSankhyiki Data Dissemination</span>
           </div>
         </div>

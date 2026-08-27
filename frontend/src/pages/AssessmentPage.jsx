@@ -11,6 +11,7 @@ export const AssessmentPage = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     const fetchAssessment = async () => {
@@ -36,6 +37,7 @@ export const AssessmentPage = () => {
   const handleSubmit = async () => {
     if (!assessment) return;
     setSubmitting(true);
+    setSubmitError('');
     try {
       const answersPayload = assessment.questions.map((q) => ({
         question_id: q.id,
@@ -46,6 +48,7 @@ export const AssessmentPage = () => {
       setResult(res.data);
     } catch (err) {
       console.error("Error submitting baseline test:", err);
+      setSubmitError(err.response?.data?.detail || 'Assessment evaluation encountered an error. Please try submitting again.');
     } finally {
       setSubmitting(false);
     }
@@ -129,6 +132,13 @@ export const AssessmentPage = () => {
           </span>
         </div>
       </div>
+
+      {submitError && (
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-600" />
+          <span>{submitError}</span>
+        </div>
+      )}
 
       {/* Progress Bar */}
       <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">

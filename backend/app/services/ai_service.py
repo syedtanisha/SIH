@@ -1,7 +1,5 @@
 import json
 import re
-import asyncio
-import random
 import logging
 import httpx
 from typing import List, Dict, Any, Optional
@@ -11,10 +9,7 @@ logger = logging.getLogger(__name__)
 
 def clean_json_string(raw: str) -> str:
     """Strip markdown code blocks or trailing characters to obtain valid JSON."""
-    if not raw:
-        return ""
     raw = raw.strip()
-    # Remove markdown code blocks if present
     if raw.startswith("```json"):
         raw = raw[7:]
     elif raw.startswith("```"):
@@ -23,99 +18,287 @@ def clean_json_string(raw: str) -> str:
         raw = raw[:-3]
     return raw.strip()
 
-async def _post_with_retry(
-    url: str,
-    headers: Dict[str, str],
-    json_payload: Dict[str, Any],
-    provider_name: str,
-    timeout: float = 30.0,
-    max_retries: int = 2
-) -> Optional[Dict[str, Any]]:
-    """Execute an HTTP POST with exponential backoff and jitter for transient failures."""
-    delay = 0.5
-    for attempt in range(max_retries + 1):
+async def call_llm(prompt: str, system_prompt: str = "You are an AI Statistical Capacity Building Specialist for India's Official Statistical System.") -> str:
+    """Multi-provider LLM executor supporting Grok (xAI), Groq, Gemini, OpenAI, or local fallback."""
+    # 1. Try Grok (xAI) if key provided
+    grok_key = settings.XAI_API_KEY or settings.GROK_API_KEY
+    if grok_key:
         try:
-            async with httpx.AsyncClient(timeout=timeout) as client:
-                res = await client.post(url, headers=headers, json=json_payload)
-                # Retry on 429 (rate limit) or 5xx server errors
-                if res.status_code in (429, 500, 502, 503, 504):
-                    if attempt < max_retries:
-                        backoff = delay * (2 ** attempt) + random.uniform(0.05, 0.2)
-                        logger.warning(f"[AI Service] {provider_name} returned status {res.status_code}. Retrying in {backoff:.2f}s (attempt {attempt+1}/{max_retries})...")
-                        await asyncio.sleep(backoff)
-                        continue
+            async with httpx.AsyncClient(timeout=35.0) as client:
+                res = await client.post(
+                    f"{settings.XAI_BASE_URL.rstrip('/')}/chat/completions",
+                    headers={"Authorization": f"Bearer {grok_key}"},
+                    json={
+                        "model": settings.GROK_MODEL or "grok-2-latest",
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": prompt}
+                        ],
+                        "temperature": 0.3
+                    }
+                )
                 if res.status_code == 200:
-                    return res.json()
-                else:
-                    logger.warning(f"[AI Service] {provider_name} returned non-200 status code: {res.status_code}")
-                    return None
-        except (httpx.TimeoutException, httpx.ConnectError, httpx.NetworkError) as e:
-            if attempt < max_retries:
-                backoff = delay * (2 ** attempt) + random.uniform(0.05, 0.2)
-                logger.warning(f"[AI Service] {provider_name} connection/timeout error: {type(e).__name__}. Retrying in {backoff:.2f}s (attempt {attempt+1}/{max_retries})...")
-                await asyncio.sleep(backoff)
-            else:
-                logger.error(f"[AI Service] {provider_name} exhausted all {max_retries+1} attempts: {type(e).__name__}")
+                    data = res.json()
+                    return data["choices"][0]["message"]["content"]
         except Exception as e:
-            logger.error(f"[AI Service] {provider_name} unexpected error: {type(e).__name__}")
-            break
-    return None
+            print(f"[AI Service] Grok (xAI) call failed: {e}")
 
-async def call_llm(
-    prompt: str,
-    system_prompt: str = "You are an AI Statistical Capacity Building Specialist for India's Official Statistical System."
-) -> str:
-    """
-    Multi-provider LLM executor supporting:
-    1. Groq (Primary) -> 2. Gemini (Secondary) -> 3. Deterministic Fallback
-    With exponential backoff and transient failure retries.
-    """
-    max_retries = getattr(settings, "LLM_MAX_RETRIES", 2)
-    timeout = getattr(settings, "LLM_TIMEOUT_SECONDS", 30.0)
-
-    # 1. Try Groq if key provided (primary)
+    # 2. Try Groq if key provided
     if settings.GROQ_API_KEY:
-        data = await _post_with_retry(
-            url="https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
-            json_payload={
-                "model": getattr(settings, "GROQ_MODEL", "llama-3.3-70b-versatile"),
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.3
-            },
-            provider_name="Groq",
-            timeout=timeout,
-            max_retries=max_retries
-        )
-        if data and "choices" in data and len(data["choices"]) > 0:
-            content = data["choices"][0]["message"].get("content", "")
-            if content.strip():
-                return content.strip()
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                res = await client.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}"},
+                    json={
+                        "model": settings.GROQ_MODEL or "llama-3.3-70b-versatile",
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": prompt}
+                        ],
+                        "temperature": 0.3
+                    }
+                )
+                if res.status_code == 200:
+                    data = res.json()
+                    return data["choices"][0]["message"]["content"]
+        except Exception as e:
+            print(f"[AI Service] Groq call failed: {e}")
 
-    # 2. Try Gemini if key provided (secondary)
+    # 3. Try Gemini if key provided
     if settings.GEMINI_API_KEY:
-        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={settings.GEMINI_API_KEY}"
-        data = await _post_with_retry(
-            url=gemini_url,
-            headers={"Content-Type": "application/json"},
-            json_payload={
-                "contents": [{"parts": [{"text": f"{system_prompt}\n\n{prompt}"}]}]
-            },
-            provider_name="Gemini",
-            timeout=timeout,
-            max_retries=max_retries
-        )
-        if data and "candidates" in data and len(data["candidates"]) > 0:
-            parts = data["candidates"][0].get("content", {}).get("parts", [])
-            if parts and "text" in parts[0]:
-                content = parts[0]["text"]
-                if content.strip():
-                    return content.strip()
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                res = await client.post(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={settings.GEMINI_API_KEY}",
+                    json={
+                        "contents": [{"parts": [{"text": f"{system_prompt}\n\n{prompt}"}]}]
+                    }
+                )
+                if res.status_code == 200:
+                    data = res.json()
+                    return data["candidates"][0]["content"]["parts"][0]["text"]
+        except Exception as e:
+            print(f"[AI Service] Gemini call failed: {e}")
 
+    # Fallback deterministic response
     return ""
+
+async def generate_grok_gap_diagnosis_async(
+    officer_name: str,
+    designation: str,
+    division: str,
+    gaps: List[Dict[str, Any]],
+    overall_readiness: float
+) -> str:
+    """Use Grok AI to interpret deterministic gap metrics and explain role-tailored capacity building needs."""
+    if not gaps:
+        return (
+            f"Outstanding capacity profile, {officer_name}! You have achieved benchmark readiness across all statistical competencies "
+            f"for your role in {division}. Continue maintaining proficiency through advanced NSSTA research publications and MoSPI technical manuals."
+        )
+
+    top_gaps = gaps[:3]
+    gap_descriptions = [f"{g['name']} (Current: {g['current_level']}%, Role Target: {g['required_level']}%, Gap: {g['gap']}%, Priority: {g['priority']})" for g in top_gaps]
+    gap_str = "\n".join([f"- {gd}" for gd in gap_descriptions])
+
+    prompt = f"""
+Analyze the following officer competency gaps for India's Official Statistical System:
+Officer Name: {officer_name}
+Cadre / Designation: {designation}
+Division / Department: {division}
+Overall Readiness Index: {overall_readiness}%
+
+Calculated Gaps:
+{gap_str}
+
+Provide a concise, 3-4 sentence professional capacity diagnosis using AI:
+1. Explain specifically why bridging these gaps is critical for their role in {division}.
+2. Recommend immediate learning actions using NSSTA laboratory resources and MoSPI publications.
+3. Conclude with verification guidance via AI Learning Studio quizzes.
+"""
+    ai_response = await call_llm(prompt, system_prompt="You are an AI Senior Statistical Capacity Building Specialist for India's Ministry of Statistics (MoSPI) and NSSTA.")
+    if ai_response and len(ai_response.strip()) > 30:
+        return ai_response.strip()
+
+    # High-quality fallback template
+    top_gap_names = ", ".join([g["name"] for g in top_gaps])
+    return (
+        f"AI Capacity Diagnosis for {officer_name} ({designation}, {division}): "
+        f"Your statistical readiness index currently stands at {overall_readiness}%. "
+        f"Based on your role requirements in {division}, your primary capacity building priorities are {top_gap_names}. "
+        f"We recommend completing the aligned NSSTA training modules and official MoSPI guidelines, followed by AI Studio verification quizzes to validate competency gains."
+    )
+
+def generate_gap_diagnosis(
+    officer_name: str,
+    designation: str,
+    gaps: List[Dict[str, Any]],
+    overall_readiness: float,
+    division: str = "MoSPI"
+) -> str:
+    """Synchronous bridge for gap diagnosis with division context."""
+    if not gaps:
+        return f"Outstanding performance, {officer_name}! You have achieved benchmark competency across all standard domains in India's Official Statistical System."
+
+    top_gaps = gaps[:3]
+    top_gap_names = ", ".join([g["name"] for g in top_gaps])
+    return (
+        f"Diagnostic Assessment for {officer_name} ({designation}, {division}): "
+        f"Your current statistical readiness index stands at {overall_readiness}%. "
+        f"The primary areas requiring capacity building for your role are {top_gap_names}. "
+        f"To bridge these competency gaps efficiently, complete the corresponding NSSTA training modules and review the official MoSPI technical publications. "
+        f"Submitting targeted verification quizzes in the AI Learning Studio will automatically calibrate and record your official competency score growth."
+    )
+
+async def generate_grok_learning_path(
+    officer_name: str,
+    designation: str,
+    division: str,
+    gaps: List[Dict[str, Any]],
+    matched_resources: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
+    """Use AI to synthesize matched learning resources into a structured, phased learning roadmap."""
+    resources_summary = "\n".join([
+        f"- [{r.get('source', 'MoSPI')}] {r.get('title', '')} ({r.get('resource_type', '')}, Duration: {r.get('estimated_duration_mins', 60)}m, Aligned Gap: {r.get('matched_competency_name', '')})"
+        for r in matched_resources[:6]
+    ])
+
+    top_gap_name = gaps[0]["name"] if gaps else "Survey Operations"
+
+    prompt = f"""
+You are creating a personalized capacity building learning path for an officer in India's Official Statistical System.
+
+Officer: {officer_name}
+Designation: {designation}
+Division: {division}
+Primary Focus Gap: {top_gap_name}
+
+Available Government Learning Resources:
+{resources_summary}
+
+Organize the officer's journey into exactly 4 sequential learning milestones:
+Phase 1: Diagnostic Calibration & Baseline
+Phase 2: Core Concept Mastery (NSSTA Academy Modules)
+Phase 3: Applied Technical Practice (NSSTA Lab & MoSPI Reports)
+Phase 4: AI Practice Quiz Verification & Demonstrable Gain (+Delta)
+
+Return ONLY valid JSON matching this array schema:
+[
+  {{
+    "phase_number": 1,
+    "title": "Phase 1 Title",
+    "domain": "Domain Name",
+    "description": "2-sentence practical objective",
+    "recommended_resource": "Resource Title",
+    "estimated_hours": 2.5,
+    "action_type": "assessment" | "course" | "lab" | "quiz"
+  }}
+]
+"""
+    raw = await call_llm(prompt, system_prompt="You are an official learning path synthesizer for MoSPI and NSSTA.")
+    if raw:
+        try:
+            parsed = json.loads(clean_json_string(raw))
+            if isinstance(parsed, list) and len(parsed) >= 3:
+                return parsed
+        except Exception as e:
+            print(f"[AI Service] Learning path parsing error: {e}")
+
+    # High-quality fallback learning path
+    return [
+        {
+            "phase_number": 1,
+            "title": f"Phase 1: Calibrate Role Baseline for {division}",
+            "domain": "Calibration",
+            "description": f"Complete the diagnostic evaluation tailored to {designation} responsibilities and review deterministic gap metrics.",
+            "recommended_resource": "Baseline Diagnostic Assessment",
+            "estimated_hours": 0.5,
+            "action_type": "assessment"
+        },
+        {
+            "phase_number": 2,
+            "title": f"Phase 2: NSSTA Foundations in {top_gap_name}",
+            "domain": "Conceptual Foundations",
+            "description": f"Complete foundational modules at NSSTA to build theoretical grounding in {top_gap_name}.",
+            "recommended_resource": matched_resources[0]["title"] if matched_resources else "NSSTA Official Statistics Curriculum",
+            "estimated_hours": 3.0,
+            "action_type": "course"
+        },
+        {
+            "phase_number": 3,
+            "title": "Phase 3: NSSTA Digital Data Lab & Official MoSPI Publications",
+            "domain": "Applied Practice",
+            "description": "Study official survey manuals, microdata weighting SOPs, and index compilation methodologies.",
+            "recommended_resource": matched_resources[1]["title"] if len(matched_resources) > 1 else "NSSTA Training Manual",
+            "estimated_hours": 2.5,
+            "action_type": "lab"
+        },
+        {
+            "phase_number": 4,
+            "title": "Phase 4: AI Learning Studio Quiz Verification & Gain Calibration",
+            "domain": "Outcome & Delta",
+            "description": "Generate schema-enforced verification quizzes from tutorial manuals to validate mastery and achieve demonstrable skill gain (+26%).",
+            "recommended_resource": "AI Quiz Studio & Verification Engine",
+            "estimated_hours": 1.0,
+            "action_type": "quiz"
+        }
+    ]
+
+async def generate_grok_quiz_feedback(
+    quiz_title: str,
+    topic: str,
+    score_pct: float,
+    total_correct: int,
+    total_questions: int,
+    competency_name: str,
+    before_score: float,
+    after_score: float,
+    delta: float,
+    mistakes: List[Dict[str, Any]]
+) -> str:
+    """Use Grok AI to analyze quiz submission performance, diagnose errors, and give actionable feedback."""
+    mistake_summary = ""
+    if mistakes:
+        mistake_summary = "Questions needing review:\n" + "\n".join([
+            f"- Q: {m.get('question_text', '')[:120]}... Selected: Option {m.get('user_selected', '')}, Correct: Option {m.get('correct_option', '')}. Explanation: {m.get('explanation', '')[:150]}"
+            for m in mistakes[:3]
+        ])
+    else:
+        mistake_summary = "All questions answered correctly with 100% accuracy."
+
+    prompt = f"""
+You are Grok AI evaluating a quiz attempt for a statistical professional.
+
+Quiz: {quiz_title} ({topic})
+Competency: {competency_name}
+Score: {score_pct}% ({total_correct}/{total_questions} correct)
+Competency Recalibration: {before_score}% -> {after_score}% (+{delta}% demonstrated learning gain)
+
+Performance Details:
+{mistake_summary}
+
+Provide a concise, motivating, and pedagogical performance analysis (3-4 sentences):
+1. Acknowledge the quantified competency gain (+{delta}%).
+2. Highlight key conceptual takeaways and explain any specific misunderstandings from the incorrect questions.
+3. Suggest the next learning module or practice step to maintain momentum.
+"""
+    ai_response = await call_llm(prompt, system_prompt="You are Grok AI providing pedagogical feedback on official statistical examinations.")
+    if ai_response and len(ai_response.strip()) > 30:
+        return ai_response.strip()
+
+    # Fallback qualitative feedback
+    if mistakes:
+        return (
+            f"Grok AI Evaluation: You achieved {score_pct}% ({total_correct}/{total_questions} correct) on '{quiz_title}'. "
+            f"Your competency in '{competency_name}' improved by +{delta}% (from {before_score}% to {after_score}%). "
+            f"Review the pedagogical explanations below for the {len(mistakes)} questions you missed to reinforce official MoSPI definitions before proceeding to the next tutorial module."
+        )
+    return (
+        f"Grok AI Evaluation: Outstanding mastery! You achieved a perfect score of {score_pct}% ({total_correct}/{total_questions} correct) on '{quiz_title}'. "
+        f"Your official competency in '{competency_name}' has increased to {after_score}% (+{delta}% learning gain). "
+        f"Your statistical reasoning aligns completely with official guidelines. Proceed to the next milestone in your learning path!"
+    )
 
 async def generate_mcqs_from_document_async(
     text: str,
@@ -167,7 +350,7 @@ Requirements:
 """
     raw_ai = await call_llm(
         prompt,
-        system_prompt="You are a senior statistical psychometrician designing certified examinations for MoSPI and iGOT Karmayogi."
+        system_prompt="You are a senior statistical psychometrician designing certified examinations for MoSPI and NSSTA."
     )
 
     if raw_ai:
@@ -226,23 +409,30 @@ def generate_mcqs_from_text(
     difficulty: str = "Intermediate",
     competency_code: Optional[str] = None
 ) -> List[Dict[str, Any]]:
-    """Deterministic fallback question generator covering core MoSPI statistical disciplines."""
-    truncated_text = (text or "").lower()[:4000]
-    is_sampling = any(w in truncated_text for w in ["sample", "survey", "strata", "stratified", "fsu", "plfs", "nss", "sampling"])
-    is_national_accounts = any(w in truncated_text for w in ["gdp", "gva", "sna", "national accounts", "intermediate consumption"])
-    is_computing = any(w in truncated_text for w in ["python", "pandas", "numpy", "dataframe", "vectorization", "sql query", "programming"])
-    is_cpi_iip = any(w in truncated_text for w in ["cpi", "iip", "laspeyres", "price relative", "inflation index", "index number"])
+    """Generate strictly schema-enforced MCQs based on document text."""
+    # Build robust pedagogical questions from text
+    # In live mode with LLM keys, calls LLM; otherwise uses rich contextual question generator
+    truncated_text = text[:4000] if text else topic
 
-    if is_sampling:
-        comp_code = competency_code or "STAT_SURVEY"
-    elif is_national_accounts:
-        comp_code = competency_code or "STAT_NAT_ACC"
+    questions = []
+    # Dynamic domain generator based on keywords
+    is_sampling = any(w in truncated_text.lower() for w in ["sample", "survey", "strata", "fsu", "plfs", "frame", "cluster"])
+    is_national_accounts = any(w in truncated_text.lower() for w in ["gdp", "gva", "sna", "accounts", "capital", "intermediate consumption"])
+    is_computing = any(w in truncated_text.lower() for w in ["python", "pandas", "numpy", "dataframe", "vectorization", "sql query", "programming", "code"])
+    is_cpi_iip = any(w in truncated_text.lower() for w in ["cpi", "iip", "index", "price", "laspeyres"])
+
+    if competency_code:
+        comp_code = competency_code
     elif is_computing:
-        comp_code = competency_code or "STAT_COMPUTE"
+        comp_code = "STAT_COMPUTE"
+    elif is_sampling:
+        comp_code = "STAT_SURVEY"
+    elif is_national_accounts:
+        comp_code = "STAT_NAT_ACC"
     elif is_cpi_iip:
-        comp_code = competency_code or "STAT_PRICE_IND"
+        comp_code = "STAT_PRICE_IND"
     else:
-        comp_code = competency_code or "STAT_SURVEY"
+        comp_code = "STAT_SURVEY"
 
     if comp_code == "STAT_COMPUTE":
         q_templates = [
@@ -268,6 +458,7 @@ def generate_mcqs_from_text(
             }
         ]
     elif is_national_accounts:
+        comp_code = "STAT_NAT_ACC"
         q_templates = [
             {
                 "question_text": f"In the context of National Accounts Statistics ({topic}), what is deducted from Gross Value of Output to compute Gross Value Added (GVA)?",
@@ -291,6 +482,7 @@ def generate_mcqs_from_text(
             }
         ]
     elif is_cpi_iip:
+        comp_code = "STAT_PRICE_IND"
         q_templates = [
             {
                 "question_text": f"In official price statistics for {topic}, how are item-level price relatives aggregated to subgroup indices?",
@@ -304,6 +496,7 @@ def generate_mcqs_from_text(
             }
         ]
     else:
+        comp_code = "STAT_SURVEY"
         q_templates = [
             {
                 "question_text": f"Based on the concepts presented in '{topic}', what is the primary role of stratification in sample survey design?",
@@ -337,305 +530,103 @@ def generate_mcqs_from_text(
             }
         ]
 
-    questions = []
+    # Populate questions up to requested count
     for i in range(num_questions):
         template = q_templates[i % len(q_templates)].copy()
         template["competency_code"] = comp_code
         questions.append(template)
 
     return questions[:num_questions]
-
-async def generate_grok_gap_diagnosis_async(
-    officer_name: str,
-    designation: str,
-    division: str,
-    gaps: List[Dict[str, Any]],
-    overall_readiness: float
-) -> str:
-    """Use Grok AI to interpret deterministic gap metrics and explain role-tailored capacity building needs."""
-    if not gaps:
-        return (
-            f"Outstanding capacity profile, {officer_name}! You have achieved benchmark readiness across all statistical competencies "
-            f"for your role in {division}. Continue maintaining proficiency through advanced NSSTA research publications and iGOT leadership modules."
-        )
-
-    top_gaps = gaps[:3]
-    gap_descriptions = [f"{g['name']} (Current: {g['current_level']}%, Role Target: {g['required_level']}%, Gap: {g['gap']}%, Priority: {g['priority']})" for g in top_gaps]
-    gap_str = "\n".join([f"- {gd}" for gd in gap_descriptions])
-
-    prompt = f"""
-Analyze the following officer competency gaps for India's Official Statistical System:
-Officer Name: {officer_name}
-Cadre / Designation: {designation}
-Division / Department: {division}
-Overall Readiness Index: {overall_readiness}%
-
-Calculated Gaps:
-{gap_str}
-
-Provide a concise, 3-4 sentence professional capacity diagnosis using Grok AI:
-1. Explain specifically why bridging these gaps is critical for their role in {division}.
-2. Recommend immediate learning actions using iGOT Karmayogi CBPs and NSSTA laboratory resources.
-3. Conclude with verification guidance via AI Learning Studio quizzes.
-"""
-    ai_response = await call_llm(prompt, system_prompt="You are Grok AI acting as a Senior Statistical Capacity Building Specialist for India's Ministry of Statistics (MoSPI).")
-    if ai_response and len(ai_response.strip()) > 30:
-        return ai_response.strip()
-
-    top_gap_names = ", ".join([g["name"] for g in top_gaps])
-    return (
-        f"Grok AI Capacity Diagnosis for {officer_name} ({designation}, {division}): "
-        f"Your statistical readiness index currently stands at {overall_readiness}%. "
-        f"Based on your role requirements in {division}, your primary capacity building priorities are {top_gap_names}. "
-        f"We recommend completing the aligned iGOT Karmayogi courses and official NSSTA modules, followed by AI Studio verification quizzes to validate competency gains."
-    )
-
-def generate_gap_diagnosis(
-    officer_name: str,
-    designation: str,
-    gaps: List[Dict[str, Any]],
-    overall_readiness: float,
-    division: str = "MoSPI"
-) -> str:
-    """Synchronous bridge for gap diagnosis with division context."""
-    if not gaps:
-        return f"Outstanding performance, {officer_name}! You have achieved benchmark competency across all standard domains in India's Official Statistical System."
-
-    top_gaps = gaps[:3]
-    top_gap_names = ", ".join([g["name"] for g in top_gaps])
-    return (
-        f"Diagnostic Assessment for {officer_name} ({designation}, {division}): "
-        f"Your current statistical readiness index stands at {overall_readiness}%. "
-        f"The primary areas requiring capacity building for your role are {top_gap_names}. "
-        f"To bridge these competency gaps efficiently, complete the corresponding iGOT Karmayogi Competency Building Products (CBPs) and review the official NSSTA training modules. "
-        f"Submitting targeted verification quizzes in the AI Learning Studio will automatically calibrate and record your official competency score growth."
-    )
-
-async def generate_grok_learning_path(
-    officer_name: str,
-    designation: str,
-    division: str,
-    gaps: List[Dict[str, Any]],
-    matched_resources: List[Dict[str, Any]]
-) -> List[Dict[str, Any]]:
-    """Use Grok AI to synthesize matched learning resources into a structured, phased learning roadmap."""
-    resources_summary = "\n".join([
-        f"- [{r.get('source', 'MoSPI')}] {r.get('title', '')} ({r.get('resource_type', '')}, Duration: {r.get('estimated_duration_mins', 60)}m, Aligned Gap: {r.get('matched_competency_name', '')})"
-        for r in matched_resources[:6]
-    ])
-
-    top_gap_name = gaps[0]["name"] if gaps else "Survey Operations"
-
-    prompt = f"""
-You are Grok AI creating a personalized capacity building learning path for an officer in India's Official Statistical System.
-
-Officer: {officer_name}
-Designation: {designation}
-Division: {division}
-Primary Focus Gap: {top_gap_name}
-
-Available Government Learning Resources:
-{resources_summary}
-
-Organize the officer's journey into exactly 4 sequential learning milestones:
-Phase 1: Diagnostic Calibration & Baseline
-Phase 2: Core Concept Mastery (iGOT Karmayogi CBPs)
-Phase 3: Applied Technical Practice (NSSTA Lab & MoSPI Reports)
-Phase 4: AI Practice Quiz Verification & Demonstrable Gain (+Delta)
-
-Return ONLY valid JSON matching this array schema:
-[
-  {{
-    "phase_number": 1,
-    "title": "Phase 1 Title",
-    "domain": "Domain Name",
-    "description": "2-sentence practical objective",
-    "recommended_resource": "Resource Title",
-    "estimated_hours": 2.5,
-    "action_type": "assessment"
-  }}
-]
-"""
-    raw = await call_llm(prompt, system_prompt="You are Grok AI, the official learning path synthesizer for MoSPI and iGOT Karmayogi.")
-    if raw:
-        try:
-            parsed = json.loads(clean_json_string(raw))
-            if isinstance(parsed, list) and len(parsed) >= 3:
-                return parsed
-        except Exception as e:
-            print(f"[AI Service] Grok learning path parsing error: {e}")
-
-    # Fallback learning path
-    return [
-        {
-            "phase_number": 1,
-            "title": f"Phase 1: Calibrate Role Baseline for {division}",
-            "domain": "Calibration",
-            "description": f"Complete the diagnostic evaluation tailored to {designation} responsibilities and review deterministic gap metrics.",
-            "recommended_resource": "Baseline Diagnostic Assessment",
-            "estimated_hours": 0.5,
-            "action_type": "assessment"
-        },
-        {
-            "phase_number": 2,
-            "title": f"Phase 2: iGOT Karmayogi Foundations in {top_gap_name}",
-            "domain": "Conceptual Foundations",
-            "description": f"Complete foundational modules on iGOT Karmayogi to build theoretical grounding in {top_gap_name}.",
-            "recommended_resource": matched_resources[0]["title"] if matched_resources else "iGOT Official Statistics CBP",
-            "estimated_hours": 3.0,
-            "action_type": "course"
-        },
-        {
-            "phase_number": 3,
-            "title": "Phase 3: NSSTA Digital Data Lab & Official MoSPI Publications",
-            "domain": "Applied Practice",
-            "description": "Study official survey manuals, microdata weighting SOPs, and index compilation methodologies.",
-            "recommended_resource": matched_resources[1]["title"] if len(matched_resources) > 1 else "NSSTA Training Manual",
-            "estimated_hours": 2.5,
-            "action_type": "lab"
-        },
-        {
-            "phase_number": 4,
-            "title": "Phase 4: AI Learning Studio Quiz Verification & Gain Calibration",
-            "domain": "Outcome & Delta",
-            "description": "Generate schema-enforced verification quizzes from tutorial manuals to validate mastery and achieve demonstrable skill gain (+26%).",
-            "recommended_resource": "AI Quiz Studio & Verification Engine",
-            "estimated_hours": 1.0,
-            "action_type": "quiz"
-        }
-    ]
-
-async def generate_grok_quiz_feedback(
-    quiz_title: str,
-    topic: str,
-    score_pct: float,
-    total_correct: int,
-    total_questions: int,
-    competency_name: str,
-    before_score: float,
-    after_score: float,
-    delta: float,
-    mistakes: List[Dict[str, Any]]
-) -> str:
-    """
-    Use Grok AI to generate detailed, pedagogical quiz feedback:
-    - Analyzes misconceptions and conceptual weaknesses for missed questions
-    - Highlights demonstrated learning gain (+Delta)
-    - Recommends actionable next steps
-    """
-    mistake_summary = ""
-    if mistakes:
-        mistake_summary = "Questions needing review:\n" + "\n".join([
-            f"- Q: {m.get('question_text', '')[:140]}... Selected: Option {m.get('user_selected', '')}, Correct: Option {m.get('correct_option', '')}. Explanation: {m.get('explanation', '')[:160]}"
-            for m in mistakes[:4]
-        ])
-    else:
-        mistake_summary = "All questions answered correctly with 100% accuracy."
-
-    prompt = f"""
-You are Grok AI evaluating an official statistical examination attempt for India's Ministry of Statistics (MoSPI).
-
-Quiz: {quiz_title} ({topic})
-Competency: {competency_name}
-Score: {score_pct}% ({total_correct}/{total_questions} correct)
-Competency Recalibration: {before_score}% -> {after_score}% (+{delta}% demonstrated learning gain)
-
-Performance Details:
-{mistake_summary}
-
-Provide a concise, motivating, and highly pedagogical performance analysis (3-4 sentences):
-1. Quantified Progress: Acknowledge the competency calibration gain (+{delta}%).
-2. Conceptual Feedback: Identify specific conceptual misconceptions if questions were missed; if 100%, emphasize advanced statistical synthesis.
-3. Next Steps: Recommend the immediate next iGOT CBP module or practical NSSTA laboratory exercise.
-"""
-    ai_response = await call_llm(prompt, system_prompt="You are Grok AI providing pedagogical feedback on official statistical examinations.")
-    if ai_response and len(ai_response.strip()) > 30:
-        return ai_response.strip()
-
-    # High-quality fallback qualitative feedback
-    if mistakes:
-        return (
-            f"Grok AI Evaluation: You achieved {score_pct}% ({total_correct}/{total_questions} correct) on '{quiz_title}'. "
-            f"Your competency in '{competency_name}' improved by +{delta}% (from {before_score}% to {after_score}%). "
-            f"Review the pedagogical explanations below for the {len(mistakes)} question(s) you missed to reinforce official MoSPI definitions before proceeding to the next tutorial milestone."
-        )
-    return (
-        f"Grok AI Evaluation: Outstanding mastery! You achieved a perfect score of {score_pct}% ({total_correct}/{total_questions} correct) on '{quiz_title}'. "
-        f"Your official competency in '{competency_name}' has increased to {after_score}% (+{delta}% learning gain). "
-        f"Your statistical reasoning aligns completely with official guidelines. Proceed to the next milestone in your learning path!"
-    )
-
 async def generate_final_interview_questions(
     competencies: List[Dict[str, Any]],
     num_questions: int = 5
 ) -> List[Dict[str, Any]]:
     """
-    Generate AI-powered progressive final interview questions based on
-    the officer's current competency gaps (Basic Concept -> Application -> Scenario -> Decision-Making).
+    Generate AI-powered final interview questions based on
+    the officer's current competency gaps.
     """
-    competency_context = "\n".join([
-        f"- {c['name']} ({c['domain']}): Current={c['current_score']}%, Benchmark={c['required_benchmark']}%, Gap={c['gap']}%"
-        for c in competencies
-    ])
+
+    competency_context = "\n".join(
+        [
+            (
+                f"- {c['name']} "
+                f"({c['domain']}): "
+                f"Current={c['current_score']}%, "
+                f"Benchmark={c['required_benchmark']}%, "
+                f"Gap={c['gap']}%"
+            )
+            for c in competencies
+        ]
+    )
 
     prompt = f"""
-You are conducting the final professional evaluation for an officer in India's Official Statistical System.
+You are conducting the final professional assessment for
+an officer in India's Official Statistical System.
 
-Officer Competency Profile:
+The officer's current competency profile is:
+
 {competency_context}
 
-Generate exactly {num_questions} professional, open-ended interview questions (NOT multiple choice).
-Progressively structure the questions through:
-1. Basic Concept & Definitions
-2. Conceptual Understanding & Methodological Frameworks
-3. Applied Field / Data Scenarios
-4. High-Level Decision Making & Quality Governance
+Generate exactly {num_questions} professional interview questions.
 
-Return ONLY valid JSON using this exact structure:
+Requirements:
+1. Focus primarily on the largest competency gaps.
+2. Questions must test understanding and practical application.
+3. Do not make questions multiple-choice.
+4. Questions should be appropriate for a statistical professional.
+5. Cover different competencies where possible.
+6. Return ONLY valid JSON.
+7. Use this exact structure:
+
 [
   {{
-    "question": "Open-ended scenario or methodological question",
+    "question": "Question text",
     "competency_code": "COMPETENCY_CODE",
-    "domain": "Domain Name",
+    "domain": "Domain name",
     "difficulty": "Intermediate"
   }}
 ]
 """
+
     raw = await call_llm(
         prompt,
-        system_prompt="You are a senior ISS board examiner for India's Official Statistical System."
+        system_prompt=(
+            "You are a senior interviewer and statistical "
+            "capacity-building specialist for India's "
+            "Official Statistical System."
+        )
     )
 
     if raw:
         try:
             parsed = json.loads(clean_json_string(raw))
-            if isinstance(parsed, list) and len(parsed) > 0:
-                valid_list = []
-                for item in parsed:
-                    if isinstance(item, dict) and item.get("question"):
-                        valid_list.append({
-                            "question": str(item["question"]).strip(),
-                            "competency_code": item.get("competency_code", competencies[0]["code"] if competencies else "STAT_SURVEY"),
-                            "domain": item.get("domain", competencies[0]["domain"] if competencies else "Survey Operations"),
-                            "difficulty": item.get("difficulty", "Intermediate")
-                        })
-                if valid_list:
-                    return valid_list[:num_questions]
-        except Exception as e:
-            print(f"[AI Service] Final interview JSON parsing failed: {e}")
 
-    # Fallback deterministic questions
+            if isinstance(parsed, list):
+                return parsed[:num_questions]
+
+        except Exception as e:
+            print(
+                f"[AI Service] Final interview JSON parsing failed: {e}"
+            )
+
+    # Safe deterministic fallback
     questions = []
+
     for competency in competencies[:num_questions]:
-        questions.append({
-            "question": f"Explain the core methodological principles of {competency['name']} and describe how you would resolve estimation challenges in national surveys.",
-            "competency_code": competency["code"],
-            "domain": competency["domain"],
-            "difficulty": "Intermediate"
-        })
+        questions.append(
+            {
+                "question": (
+                    f"Explain the key concepts and practical "
+                    f"applications of {competency['name']} "
+                    f"in India's official statistical system."
+                ),
+                "competency_code": competency["code"],
+                "domain": competency["domain"],
+                "difficulty": "Intermediate"
+            }
+        )
 
     return questions
-
 async def evaluate_final_interview_answer(
     question: str,
     answer: str,
@@ -644,68 +635,91 @@ async def evaluate_final_interview_answer(
     difficulty: str
 ) -> Dict[str, Any]:
     """
-    Evaluate an interview answer on accuracy, conceptual understanding,
-    practical application, reasoning, and professional communication.
+    Evaluate one final-interview answer and determine
+    the appropriate difficulty for the next question.
     """
+
     prompt = f"""
-You are a senior ISS examiner evaluating an official statistical candidate's response.
+You are a senior interviewer for India's Official Statistical System.
 
-Competency: {competency} ({domain})
-Difficulty: {difficulty}
-Question: {question}
-Candidate Answer: {answer}
+Evaluate the following professional interview answer.
 
-Evaluate on 5 pillars:
+Competency:
+{competency}
+
+Domain:
+{domain}
+
+Question difficulty:
+{difficulty}
+
+Interview question:
+{question}
+
+Candidate answer:
+{answer}
+
+Evaluate the answer based on:
 1. Accuracy
-2. Conceptual Understanding
-3. Practical Application
-4. Statistical Reasoning
-5. Clarity of Communication
+2. Understanding of the statistical concept
+3. Practical application
+4. Reasoning
+5. Professional communication
 
-Scoring Guidelines:
-- 9-10: Exemplary mastery & clear application
-- 7-8: Solid understanding with minor gaps
-- 5-6: Basic grasp but lacks depth or practical details
-- 0-4: Significant misunderstandings
+Scoring:
+- 9-10: Excellent
+- 7-8: Strong
+- 5-6: Moderate
+- 3-4: Weak
+- 0-2: Very weak
+
+Determine the next difficulty:
+- Score 8-10 → Advanced
+- Score 5-7 → Intermediate
+- Score 0-4 → Beginner
 
 Return ONLY valid JSON using exactly this structure:
+
 {{
-    "score": 8,
-    "evaluation": "Clear, constructive 2-3 sentence assessment.",
-    "strengths": ["Key strengths identified"],
-    "weaknesses": ["Key areas for improvement"],
+    "score": 0,
+    "evaluation": "",
+    "strengths": [],
+    "weaknesses": [],
     "next_difficulty": "Intermediate"
 }}
 """
+
     raw = await call_llm(
         prompt,
-        system_prompt="You are a senior official statistical interviewer evaluating candidate proficiency."
+        system_prompt=(
+            "You are a senior professional interviewer "
+            "specializing in India's Official Statistical System. "
+            "Evaluate answers fairly, specifically, and constructively."
+        )
     )
 
     if raw:
         try:
             result = json.loads(clean_json_string(raw))
-            if isinstance(result, dict) and "score" in result:
-                return {
-                    "score": int(result.get("score", 7)),
-                    "evaluation": str(result.get("evaluation", "Response received and evaluated.")),
-                    "strengths": list(result.get("strengths", [])),
-                    "weaknesses": list(result.get("weaknesses", [])),
-                    "next_difficulty": str(result.get("next_difficulty", "Intermediate"))
-                }
-        except Exception as e:
-            logger.error(f"[AI Service] Interview answer evaluation failed: {e}")
 
-    # Fallback evaluation
-    ans_len = len((answer or "").strip())
-    score = 8 if ans_len > 120 else (6 if ans_len > 40 else 4)
+            if isinstance(result, dict):
+                return result
+
+        except Exception as e:
+            print(
+                f"[AI Service] Interview answer evaluation failed: {e}"
+            )
+
+    # Safe fallback if the AI provider is unavailable
     return {
-        "score": score,
+        "score": 5,
         "evaluation": (
-            f"Your answer demonstrates awareness of {competency} concepts. "
-            f"To achieve full benchmark mastery, incorporate specific MoSPI SOP references and variance minimization protocols."
+            "The answer was received and requires further "
+            "evaluation against the relevant statistical concepts."
         ),
-        "strengths": [f"Addressed the core subject matter of {domain}"],
-        "weaknesses": ["Further elaboration on official survey manuals recommended."],
-        "next_difficulty": "Advanced" if score >= 8 else "Intermediate"
+        "strengths": [],
+        "weaknesses": [
+            "AI evaluation was unavailable for this response."
+        ],
+        "next_difficulty": "Intermediate"
     }

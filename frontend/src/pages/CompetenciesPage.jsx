@@ -53,7 +53,7 @@ export const CompetenciesPage = () => {
             Official Statistical Competencies Matrix
           </h1>
           <p className="text-xs text-slate-500 max-w-2xl mt-1">
-            Standardized benchmarks aligned with MoSPI divisions, NSSTA Greater Noida modules, and iGOT Karmayogi FRAC requirements.
+            Standardized benchmarks aligned with MoSPI divisions, NSSTA Greater Noida modules, and official statistical cadre requirements.
           </p>
         </div>
 
@@ -160,7 +160,7 @@ export const CompetenciesPage = () => {
                         <Link
                           to={`/recommendations?gap=${encodeURIComponent(c.name)}`}
                           className="p-1.5 rounded-md text-slate-600 hover:text-mospi-900 hover:bg-slate-100"
-                          title="View iGOT & NSSTA Modules"
+                          title="View NSSTA & MoSPI Modules"
                         >
                           <BookOpen className="w-4 h-4" />
                         </Link>

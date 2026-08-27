@@ -32,19 +32,6 @@ def get_personalized_recommendations(user_id: int, db: Session) -> Recommendatio
         focus_gap_code = "STAT_SURVEY"
         gap_val = 0.0
 
-    # Handle zero active resources cleanly
-    if not all_resources:
-        return RecommendationResponse(
-            primary_focus_gap=focus_gap_name,
-            gap_percentage=gap_val,
-            total_recommendations=0,
-            recommendations=[],
-            ai_curation_note=(
-                f"No active learning resources are currently published in the catalog for {focus_gap_name}. "
-                f"Please check back soon as new MoSPI, NSSTA, and iGOT modules are synchronized."
-            )
-        )
-
     recommendations: List[RecommendationItem] = []
 
     for res in all_resources:
@@ -91,9 +78,9 @@ def get_personalized_recommendations(user_id: int, db: Session) -> Recommendatio
     recommendations.sort(key=lambda x: x.match_score, reverse=True)
 
     curation_note = (
-        f"Grok AI Curated Roadmap for {user.full_name if user else 'Officer'} ({user.department if user else 'MoSPI'}): "
+        f"AI Curated Roadmap for {user.full_name if user else 'Officer'} ({user.department if user else 'MoSPI'}): "
         f"Prioritizing your primary competency gap in {focus_gap_name} ({gap_val}% gap). "
-        f"Begin with foundational iGOT Karmayogi courses to build conceptual mastery, followed by official NSSTA laboratory manuals and MoSPI data products. "
+        f"Begin with foundational NSSTA Academy modules to build conceptual mastery, followed by official MoSPI laboratory manuals and eSankhyiki data products. "
         f"Validate each milestone with AI Learning Studio practice quizzes."
     )
 
@@ -125,14 +112,14 @@ def get_personalized_learning_path(user_id: int, db: Session) -> LearningPathRes
     for r in all_resources:
         aligned = [m.competency.code for m in r.competency_mappings if m.competency]
         if top_gap_code in aligned or any(g.code in aligned for g in gap_analysis.gaps[:2]):
-            if r.source == "iGOT_Karmayogi":
+            if r.source == "NSSTA":
                 matched_courses.append(r)
-            elif r.source == "NSSTA":
+            elif r.source == "MoSPI":
                 matched_labs.append(r)
             else:
                 matched_reports.append(r)
 
-    primary_course = matched_courses[0] if matched_courses else (all_resources[0] if len(all_resources) > 0 else None)
+    primary_course = matched_courses[0] if matched_courses else (all_resources[0] if all_resources else None)
     primary_lab = matched_labs[0] if matched_labs else (all_resources[1] if len(all_resources) > 1 else None)
     primary_pub = matched_reports[0] if matched_reports else (all_resources[2] if len(all_resources) > 2 else None)
 
@@ -161,7 +148,7 @@ def get_personalized_learning_path(user_id: int, db: Session) -> LearningPathRes
             phase_number=2,
             title="Step 2: Deterministic Gap Analysis & AI Prescription",
             domain="Diagnostics",
-            description=f"Inspect your priority-ranked gaps ($Required - Current = Gap$) and review the Grok AI capacity building prescription for {user.designation if user else 'your cadre'}.",
+            description=f"Inspect your priority-ranked gaps ($Required - Current = Gap$) and review the AI capacity building prescription for {user.designation if user else 'your cadre'}.",
             recommended_resource="Deterministic Gap Matrix & AI Prescription",
             official_url="/gap-analysis",
             estimated_hours=0.5,
@@ -172,15 +159,15 @@ def get_personalized_learning_path(user_id: int, db: Session) -> LearningPathRes
         ),
         LearningPathMilestone(
             phase_number=3,
-            title=f"Step 3: iGOT Karmayogi CBP — {primary_course.title if primary_course else 'Official Statistical Foundations'}",
+            title=f"Step 3: NSSTA Academy Module — {primary_course.title if primary_course else 'Official Statistical Foundations'}",
             domain="Foundations",
-            description=f"Complete the recommended Competency Building Product on iGOT Karmayogi to build conceptual mastery in {top_gap_name}.",
-            recommended_resource=primary_course.title if primary_course else "iGOT Official Statistics Module",
+            description=f"Complete the recommended training module at NSSTA to build conceptual mastery in {top_gap_name}.",
+            recommended_resource=primary_course.title if primary_course else "NSSTA Official Statistics Module",
             resource_id=primary_course.id if primary_course else None,
-            official_url=primary_course.official_url if primary_course else "https://igotkarmayogi.gov.in",
+            official_url=primary_course.official_url if primary_course else "https://www.mospi.gov.in",
             estimated_hours=3.0,
             action_type="course",
-            action_link="/hub?tab=igot",
+            action_link="/hub?tab=nssta",
             completed=has_taken_quiz,
             competency_code=top_gap_code
         ),

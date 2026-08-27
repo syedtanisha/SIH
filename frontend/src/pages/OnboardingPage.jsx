@@ -51,9 +51,9 @@ export const OnboardingPage = () => {
           <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold text-sm border border-amber-200">
             3
           </div>
-          <h3 className="text-sm font-bold text-slate-900">iGOT & AI Quiz Studio</h3>
+          <h3 className="text-sm font-bold text-slate-900">NSSTA & AI Quiz Studio</h3>
           <p className="text-xs text-slate-600 leading-relaxed">
-            Access iGOT Karmayogi CBPs, upload official statistical reports in the AI Studio, take quizzes, and track your $+26\%$ competency gain.
+            Access official NSSTA training modules, upload statistical reports in the AI Studio, take quizzes, and track your $+26\%$ competency gain.
           </p>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { documentApi, quizApi, competencyApi } from '../services/api';
 import { 
@@ -11,7 +11,9 @@ import {
   ArrowRight, 
   Play,
   Layers,
-  BookOpen
+  BookOpen,
+  Cpu,
+  Zap
 } from 'lucide-react';
 
 export const StudioPage = () => {
@@ -37,12 +39,20 @@ export const StudioPage = () => {
   const [genDifficulty, setGenDifficulty] = useState('Intermediate');
   const [genCompId, setGenCompId] = useState('');
   const [customText, setCustomText] = useState('');
+  const [aiProvider, setAiProvider] = useState('groq'); // 'groq', 'gemini', 'auto'
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState('');
 
   useEffect(() => {
     fetchInitialData();
   }, []);
+
+  useEffect(() => {
+    if (initialTopic) {
+      setGenTopic(initialTopic);
+      setActiveTab('generate');
+    }
+  }, [initialTopic]);
 
   const fetchInitialData = async () => {
     try {
@@ -111,19 +121,28 @@ export const StudioPage = () => {
     }
   };
 
+  const presetTopics = [
+    'Periodic Labour Force Survey (PLFS) UPSS & CWS Concepts',
+    'National Accounts SNA 2008 GVA Estimation by Industry',
+    'Consumer Price Index (CPI) Laspeyres Formula & Basket Weights',
+    'Survey Sampling FSUs & Multiplier Weight Expansion',
+    'Microdata Anonymization & Data Governance on eSankhyiki',
+    'Annual Survey of Industries (ASI) Net Value Added Calculation'
+  ];
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header */}
       <div className="bg-gradient-to-r from-mospi-900 via-mospi-800 to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-lg border border-mospi-700/50 space-y-3">
         <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
           <Sparkles className="w-4 h-4" />
-          <span>AI Learning Studio • Document Ingestion & MCQ Generator</span>
+          <span>AI Learning Studio • Powered by Groq AI & Google Gemini</span>
         </div>
         <h1 className="text-xl sm:text-3xl font-bold tracking-tight">
           AI Pedagogical Quiz Studio
         </h1>
         <p className="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
-          Upload official MoSPI survey reports, PLFS manuals, and methodological briefs (PDF, DOCX, PPTX, TXT) to generate schema-enforced verification MCQs with detailed explanations.
+          Upload official MoSPI survey reports, NSSTA manuals, and methodological briefs (PDF, DOCX, PPTX, TXT) or enter custom statistical prompts to generate schema-enforced verification MCQs with detailed explanations.
         </p>
       </div>
 
@@ -183,7 +202,7 @@ export const StudioPage = () => {
                   Drag and drop your file here, or click to browse
                 </p>
                 <p className="text-[11px] text-slate-400 mb-4">
-                  e.g., PLFS_Methodology_Note.pdf, National_Accounts_Guide.docx
+                  e.g., PLFS_Methodology_Note.pdf, National_Accounts_Guide.docx, CPI_Technical_Manual.pdf
                 </p>
                 <input
                   type="file"
@@ -203,11 +222,11 @@ export const StudioPage = () => {
               <button
                 type="submit"
                 disabled={!uploadFile || uploading}
-                className="w-full py-2.5 bg-mospi-900 hover:bg-mospi-800 text-white text-xs font-bold rounded-lg shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3 bg-mospi-900 hover:bg-mospi-800 text-white text-xs font-bold rounded-lg shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {uploading ? 'Extracting Text & Processing...' : (
                   <>
-                    <span>Upload & Continue to Quiz Generation</span>
+                    <span>Upload & Continue to AI Quiz Generation</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </>
                 )}
@@ -240,7 +259,7 @@ export const StudioPage = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate-500">No documents uploaded yet. Upload a file above to begin.</p>
+              <p className="text-xs text-slate-500">No documents uploaded yet. Upload a file to test AI extraction.</p>
             )}
           </div>
         </div>
@@ -248,10 +267,35 @@ export const StudioPage = () => {
 
       {/* Tab 2: Generate AI Quiz */}
       {activeTab === 'generate' && (
-        <div className="max-w-2xl mx-auto bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="max-w-3xl mx-auto bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
           <div>
-            <h2 className="text-base font-bold text-slate-900">Configure AI MCQ Generation</h2>
-            <p className="text-xs text-slate-500">Grounded strictly in official text with pedagogical explanations.</p>
+            <div className="flex items-center gap-2 text-xs font-semibold text-mospi-800 mb-1">
+              <Zap className="w-4 h-4 text-amber-500" />
+              <span>Prompt-Driven & Grounded MCQ Generation Engine</span>
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Configure AI Quiz Generation</h2>
+            <p className="text-xs text-slate-500">Grounded in official MoSPI methodologies with detailed pedagogical rationales.</p>
+          </div>
+
+          {/* Quick Presets */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">Official Statistical Topic Presets:</label>
+            <div className="flex flex-wrap gap-1.5">
+              {presetTopics.map((topic, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setGenTopic(topic)}
+                  className={`text-[11px] px-2.5 py-1 rounded-lg border transition ${
+                    genTopic === topic
+                      ? 'bg-mospi-900 text-white border-mospi-900 font-semibold'
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  {topic}
+                </button>
+              ))}
+            </div>
           </div>
 
           {genError && (
@@ -270,7 +314,7 @@ export const StudioPage = () => {
                 value={genTopic}
                 onChange={(e) => setGenTopic(e.target.value)}
                 placeholder="e.g. Sampling Weights & Variances in PLFS"
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-mospi-500 outline-none"
+                className="w-full px-3 py-2.5 text-xs sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-mospi-500 outline-none"
               />
             </div>
 
@@ -280,7 +324,7 @@ export const StudioPage = () => {
                 <select
                   value={genDocId}
                   onChange={(e) => setGenDocId(e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-mospi-500"
+                  className="w-full px-3 py-2.5 text-xs sm:text-sm border border-slate-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-mospi-500"
                 >
                   <option value="">-- Use Topic Concepts (No File) --</option>
                   {documents.map((d) => (
@@ -294,9 +338,9 @@ export const StudioPage = () => {
                 <select
                   value={genCompId}
                   onChange={(e) => setGenCompId(e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-mospi-500"
+                  className="w-full px-3 py-2.5 text-xs sm:text-sm border border-slate-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-mospi-500"
                 >
-                  <option value="">-- Auto-Map from Content --</option>
+                  <option value="">-- Auto-Map from Topic --</option>
                   {competencies.map((c) => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
@@ -310,12 +354,12 @@ export const StudioPage = () => {
                 <select
                   value={genNumQuestions}
                   onChange={(e) => setGenNumQuestions(e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-mospi-500"
+                  className="w-full px-3 py-2.5 text-xs sm:text-sm border border-slate-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-mospi-500"
                 >
-                  <option value="3">3 Questions (Quick Check)</option>
+                  <option value="3">3 Questions (Quick Knowledge Check)</option>
                   <option value="5">5 Questions (Standard Evaluation)</option>
-                  <option value="8">8 Questions (Deep Assessment)</option>
-                  <option value="10">10 Questions (Comprehensive)</option>
+                  <option value="8">8 Questions (Deep Cadre Assessment)</option>
+                  <option value="10">10 Questions (Comprehensive Examination)</option>
                 </select>
               </div>
 
@@ -324,7 +368,7 @@ export const StudioPage = () => {
                 <select
                   value={genDifficulty}
                   onChange={(e) => setGenDifficulty(e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-mospi-500"
+                  className="w-full px-3 py-2.5 text-xs sm:text-sm border border-slate-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-mospi-500"
                 >
                   <option value="Foundational">Foundational</option>
                   <option value="Intermediate">Intermediate</option>
@@ -335,23 +379,23 @@ export const StudioPage = () => {
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Optional: Custom Excerpt or Guidelines
+                Custom Prompt Focus or Statistical Excerpt (Optional)
               </label>
               <textarea
                 rows={3}
                 value={customText}
                 onChange={(e) => setCustomText(e.target.value)}
-                placeholder="Paste key formulas, statistical paragraphs, or definitions to emphasize..."
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-mospi-500 outline-none"
+                placeholder="e.g. Emphasize Laspeyres price index formula calculations, Paasche comparisons, and basket revision protocols..."
+                className="w-full px-3 py-2 text-xs sm:text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-mospi-500 outline-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={generating}
-              className="w-full py-3 bg-mospi-900 hover:bg-mospi-800 text-white text-xs font-bold rounded-lg shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3.5 bg-mospi-900 hover:bg-mospi-800 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
             >
-              {generating ? 'Generating Schema-Enforced MCQs...' : (
+              {generating ? 'AI Generating Schema-Enforced MCQs...' : (
                 <>
                   <Sparkles className="w-4 h-4 text-amber-300" />
                   <span>Generate AI Quiz & Launch Examination</span>
